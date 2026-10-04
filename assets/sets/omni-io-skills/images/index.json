@@ -1,0 +1,58 @@
+{
+  "set": "omni-io-skills",
+  "note": "人工判读的语义标注（原始抓取的 caption 全为 null）。尺寸由 Pillow 实测，非手抄。",
+  "assets": [
+    {
+      "file": "01_arxiv-org.png",
+      "width": 1672,
+      "height": 941,
+      "aspect": 1.777,
+      "role": "概念总览 / concept overview",
+      "kind": "架构图 / architecture diagram",
+      "label": "Omni-IO Skills 全貌",
+      "description": "论文首图。中央是蓝色吉祥物智能体，左右两侧分列 Omni Modalities（TEXT/IMAGE/VIDEO/AUDIO/DOCUMENT/3D 六类，加代码共七种模态）与 Omni Tasks（UNDERSTANDING/GENERATION/REASONING/RETRIEVAL 四类任务）；底部三根支柱：SKILLS（ATOMIC/EXPERT/SCENARIO 三层）、DECLARE EXECUTION GRAPH（声明式执行图）、ASSET REGISTRY（资产登记表）；顶部横幅即论文标题 Omni-IO Skills。",
+      "narrative_use": "开场建立全貌认知：一张图同时说明「七种模态」「四类任务」「三层技能」「三根支柱」。适合做首个内容镜头，让观众一眼看到论文的完整主张。",
+      "suggested_shots": ["page-spotlight", "scan-annotate"],
+      "notes": "信息密度极高，竖屏必须放大局部（用 scan-annotate 框选底部三支柱），整图直出在竖屏会看不清文字。"
+    },
+    {
+      "file": "02_arxiv-org.png",
+      "width": 2023,
+      "height": 667,
+      "aspect": 3.033,
+      "role": "能力分层 / skill taxonomy",
+      "kind": "分类图 / taxonomy panel",
+      "label": "技能三层与六类场景",
+      "description": "三栏并列：左栏 Scenario Skills 列六个具体场景（社媒海报、办公文档、求职材料、教育分享、活动物料、游戏资产）；中栏 Expert Skills 列两项完整制作流程（海报设计、复杂视频制作）；右栏 Atomic Skills 按能力分组（Understand / Generate / Utility），每组下方是一排模态图标。",
+      "narrative_use": "把口播里的「19 个原子技能 / 2 个专家技能 / 6 个场景技能」落实成可见的分类，说明分层不是概念而是有具体清单。",
+      "suggested_shots": ["page-spotlight", "before-after"],
+      "notes": "超宽图（3.03:1），竖屏裁切会丢掉两侧，适合横屏或配合横向平移动效。"
+    },
+    {
+      "file": "03_arxiv-org.png",
+      "width": 2005,
+      "height": 781,
+      "aspect": 2.567,
+      "role": "流程机制 / pipeline mechanism",
+      "kind": "流程图 / flow diagram",
+      "label": "从用户提问到分波执行的完整链路",
+      "description": "上半部分：Input Assets → User Query（用户提出生成物料需求）→ Skill Planning（Select Skills 选中 S5 场景技能 → Hierarchical Expansion 展开为 E1/E2 专家技能与 A1/A6/A7/A9/A16 原子技能）→ DEG（Construct & Validate，把技能组成带依赖的有向图并跑校验规则）。下半部分：Per-Node Execution Loop（Route 路由 → Provider 供应商 → Injection 参数注入 → Execute 执行）与 Wave Scheduling（Wave 0 参考图分析 → Wave 1 海报素材 + Wave 2 视频与音效 → Wave 3 落地页），左侧 Asset Registry 与 Cross-turn Reuse 承接成功产物。",
+      "narrative_use": "论文机制的核心图。用来讲「分层展开」「按依赖分波并行」「参数自动注入」「产物登记复用」这四件事，是全片信息量最大的一个镜头。",
+      "suggested_shots": ["scan-annotate", "flow-diagram", "slow-push"],
+      "notes": "最适合做机制讲解镜头。竖屏建议用 scan-annotate 分两次框选（先上半 Skill Planning，再下半 Wave Scheduling）。"
+    },
+    {
+      "file": "04_arxiv-org.png",
+      "width": 1375,
+      "height": 726,
+      "aspect": 1.894,
+      "role": "实测案例 / worked example",
+      "kind": "对话截图 / conversation transcript",
+      "label": "两个真实任务的产物对照",
+      "description": "两个案例的对话记录。案例一是「艺术教程创作」：用户要求根据视频与音频生成含 11 张图的教程，产物用 <image1>…<image11> 逐个引用。案例二是「产品推广」：用户要求为 Owala FreeSip 水壶做一张 4:5 海报、一段精确 10 秒的 9:16 促销 MP4 与一个自包含 HTML 落地页，产物分别以 <image6>、<video1>、<code1> 引用。每行右侧是该案例的产物缩略图。",
+      "narrative_use": "证明这套外壳能真的交付多模态产物，而且「资产登记表」让产物可以按 ID 被逐轮引用 —— 正是口播里「下一轮只改一部分、不必重做全部」的证据。",
+      "suggested_shots": ["page-spotlight", "scan-annotate"],
+      "notes": "文字很小，竖屏必须放大局部才能看清 <image1> 这类引用符号。"
+    }
+  ]
+}

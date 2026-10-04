@@ -21,6 +21,21 @@ assets/fonts/*.otf
 !assets/images/index.json
 !assets/audio/*.srt
 
+# ── 素材集：与上面同一套原则 / Asset sets: same policy ──────────────────────
+# 大文件（图片 / 音频）不入库，索引与元数据入库。
+#
+# ⚠️ 上面的规则**不级联到子目录** —— `assets/audio/*.wav` 匹配不到
+# `assets/sets/x/audio/y.wav`，所以素材集必须单独写一份，否则会漏进去 7 MB。
+#
+# The rules above do NOT cascade into subdirectories, so the asset-set layout
+# needs its own entries or its media would be committed by accident.
+assets/sets/*/images/*.png
+assets/sets/*/images/*.jpg
+assets/sets/*/images/*.jpeg
+assets/sets/*/images/*.webp
+assets/sets/*/audio/*.wav
+assets/sets/*/audio/*.mp3
+
 # ── 密钥：绝不入库 / Secrets: never committed
 .env
 .env.local
@@ -38,11 +53,15 @@ npm-debug.log*
 remotion/public/
 remotion/out/
 
+# ── 运行时日志 / Runtime logs ─────────────────────────────────────────────
+remotion/*.log
+*.render.log
+
+# ── Remotion 预编码临时目录（必须留在工作区内，见 issues/005）────────────
+.render-tmp/
+
 # ── 编辑器 / OS ──────────────────────────────────────────────────────────
 .vscode/
 .idea/
 Thumbs.db
 desktop.ini
-
-# ���� Remotion Ԥ������ʱĿ¼���������ڹ������ڣ��� issues/005����������������������������������
-.render-tmp/
