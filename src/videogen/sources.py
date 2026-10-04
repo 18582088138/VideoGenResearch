@@ -124,6 +124,39 @@ class AssetSet:
         exts = {".png", ".jpg", ".jpeg", ".webp"}
         return sorted(p for p in self.images_dir.iterdir() if p.suffix.lower() in exts)
 
+    @property
+    def article_text(self) -> str:
+        """文章正文 / The full article text.
+
+        **为什么规划需要它**：图文类镜头的职责是承载「**图里没有、文章里有的**
+        关键信息」（用户口径：不是用分镜凑数，而是梳理文章关键信息让视频更全面）。
+        只给旁白的话，模型看不到那些没被念出来的机制/参数/结论，
+        就无从判断"哪些信息图里没有"。
+
+        读取顺序：源文章目录的 ``meta.json`` 的 ``text`` → ``article.md``。
+        都没有则返回空串（规划照常进行，只是少了这部分上下文）。
+
+        The figure shots exist to carry information the images do NOT show, so the
+        planner needs the article body, not just the narration.
+        """
+        if not self.source:
+            return ""
+        source_dir = Path(self.source)
+
+        meta_path = source_dir / "meta.json"
+        if meta_path.exists():
+            try:
+                text = str(json.loads(meta_path.read_text(encoding="utf-8")).get("text", ""))
+                if text.strip():
+                    return text
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        article = source_dir / "article.md"
+        if article.exists():
+            return article.read_text(encoding="utf-8", errors="replace")
+        return ""
+
     def describe(self) -> str:
         """一行摘要 / One-line summary for logs."""
         return (
