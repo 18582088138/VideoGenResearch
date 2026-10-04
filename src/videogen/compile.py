@@ -106,6 +106,15 @@ def compile_shot(shot: ShotSpec, asset_set: object | None = None) -> dict:
         # 路径相对 Remotion 的 public/：素材集在 public/<set>/images/ 下。
         name = getattr(asset_set, "name", "") if asset_set is not None else ""
         compiled["image"] = f"{name}/images/{shot.image}" if name else shot.image
+    if shot.image2:
+        # 第二张图（``image-pair`` 用）。**必须和 image 用同一套路径口径** ——
+        # 漏了这一步的话，spec 校验能过（REQUIRED_FIELDS 有 image2）、
+        # 但传到 Remotion 的 props 里没有它，镜头会静默退化成单图。
+        #
+        # Second image for `image-pair`; must use the same path convention as
+        # `image`, or the shot silently degrades to a single image.
+        name = getattr(asset_set, "name", "") if asset_set is not None else ""
+        compiled["image2"] = f"{name}/images/{shot.image2}" if name else shot.image2
     if shot.targets:
         compiled["targets"] = [
             {"x": t.x, "y": t.y, "w": t.w, "h": t.h, "label": t.label, "side": t.side}

@@ -28,6 +28,14 @@ import { TimelineTravel } from "./TimelineTravel";
 import { FigurePanel } from "./FigurePanel";
 import { StatCompare } from "./StatCompare";
 import { FlowDiagram } from "./FlowDiagram";
+import { IconGrid } from "./IconGrid";
+import { QuoteCard } from "./QuoteCard";
+import { StepsList } from "./StepsList";
+import { ComparisonTable } from "./ComparisonTable";
+import { LayerStack } from "./LayerStack";
+import { ProgressMeter } from "./ProgressMeter";
+import { KeywordHighlight } from "./KeywordHighlight";
+import { ImagePair } from "./ImagePair";
 
 export interface ShotRendererProps {
   shot: ShotSpec;
@@ -190,6 +198,97 @@ export const ShotRenderer: React.FC<ShotRendererProps> = ({ shot, theme, layout 
           eyebrow={shot.eyebrow}
           nodes={shot.nodes ?? []}
           caption={shot.footer ?? shot.subtext}
+          {...base}
+        />
+      );
+
+    // ——— 本轮补充的 7 个图文形态 / Figure types added this round ———
+    // 字段一律复用现有结构（bullets / nodes / sides / metric），不新增数据类型。
+
+    case "icon-grid":
+      return (
+        <IconGrid
+          title={shot.text ?? ""}
+          eyebrow={shot.eyebrow}
+          bullets={shot.bullets ?? []}
+          footer={shot.footer}
+          {...base}
+        />
+      );
+
+    case "quote-card":
+      return (
+        <QuoteCard
+          text={shot.text ?? ""}
+          subtext={shot.subtext}
+          footer={shot.footer}
+          {...base}
+        />
+      );
+
+    case "steps-list":
+      return (
+        <StepsList
+          title={shot.text ?? ""}
+          eyebrow={shot.eyebrow}
+          nodes={shot.nodes ?? []}
+          footer={shot.footer}
+          {...base}
+        />
+      );
+
+    case "comparison-table":
+      return (
+        <ComparisonTable
+          title={shot.text ?? ""}
+          metric={shot.metric}
+          sides={shot.sides ?? []}
+          bullets={shot.bullets ?? []}
+          footer={shot.footer}
+          {...base}
+        />
+      );
+
+    case "layer-stack":
+      return (
+        <LayerStack
+          title={shot.text ?? ""}
+          eyebrow={shot.eyebrow}
+          nodes={shot.nodes ?? []}
+          footer={shot.footer}
+          {...base}
+        />
+      );
+
+    case "progress-meter":
+      return (
+        <ProgressMeter
+          title={shot.text ?? ""}
+          metric={shot.metric ?? ""}
+          subtext={shot.subtext}
+          {...base}
+        />
+      );
+
+    case "keyword-highlight":
+      return (
+        <KeywordHighlight
+          text={shot.text ?? ""}
+          bullets={shot.bullets ?? []}
+          subtext={shot.subtext}
+          eyebrow={shot.eyebrow}
+          {...base}
+        />
+      );
+
+    // ——— 素材类补充：双图并排 / Multi-image type ———
+    // 素材类不渲染镜头文案（用户口径），只把 image / image2 与 eyebrow 传下去。
+    case "image-pair":
+      return (
+        <ImagePair
+          file={shot.image ?? ""}
+          file2={shot.image2 ?? ""}
+          eyebrow={shot.eyebrow}
           {...base}
         />
       );

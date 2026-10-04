@@ -231,14 +231,34 @@ def test_load_prompt_missing_raises() -> None:
         load_prompt("no-such-prompt.md")
 
 
-def test_catalog_is_generated_not_handwritten() -> None:
-    """catalog 由卡索引生成，含每张卡的元数据。"""
+def test_catalog_lists_usable_types_not_card_names() -> None:
+    """catalog 列的是**可落地的 type**，不是 157 张卡的名字。
+
+    这是本轮修掉的一个真问题：卡库 157 张与可落地 type 21 个**只有 1 个同名**
+    （``timeline-travel``）。把 ``brand-ink-open`` 这类卡名列给模型，
+    等于递一份「看得见、选不了」的清单 —— 实测导致不同文章的图文镜头高度雷同。
+
+    这条测试**专门守住"不再列卡名"**，防止以后有人"顺手"加回去。
+    """
     text = build_catalog(make_cards())
 
-    assert "title-reveal" in text
-    assert "number-roll" in text
-    assert "字标逐字结晶" in text
-    assert text.count("|") > 10  # 表格行确实生成了
+    # 可落地的 type 都在
+    for shot_type in ("title-reveal", "number-roll", "figure-panel", "icon-grid"):
+        assert f"`{shot_type}`" in text
+
+    # 卡名**不能**出现 —— 它们不是合法 type，列出来只会误导
+    assert "brand-ink-open" not in text
+    assert "可用镜头卡" not in text
+
+
+def test_catalog_covers_every_shot_type() -> None:
+    """每个可落地的 type 都必须出现在 catalog 里（不能漏）。"""
+    from videogen.spec import SHOT_TYPES
+
+    text = build_catalog([])
+
+    missing = [t for t in SHOT_TYPES if f"`{t}`" not in text]
+    assert not missing, f"catalog 漏了这些 type: {missing}"
 
 
 def test_allowed_numbers_covers_arabic_and_chinese() -> None:
@@ -344,7 +364,7 @@ def test_plan_video_sends_catalog_and_system_prompt() -> None:
     plan_video(make_request(), client=client)
 
     system, user = client.calls[0]
-    assert "可用镜头卡" in system
+    assert "可用动效" in system
     assert "number-roll" in system
     assert "旁白分段" in user
 

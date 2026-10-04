@@ -25,6 +25,7 @@ from typing import Any, Literal
 #    ShotType 联合与 REQUIRED_FIELDS，两边不一致就直接红。
 #    这条测试是补出来的 —— 曾经在 TS 端加了 3 个图文类型却忘了同步这里，
 #    于是脚本一生成 figure-panel 就被校验器拒绝（见 docs/issues/006）。
+#    （2026-10 复核：该测试文件当时确实缺失、只在注释里被引用，现已补上。）
 ShotType = Literal[
     "title-reveal",
     "page-spotlight",
@@ -37,9 +38,33 @@ ShotType = Literal[
     "timeline-travel",
     "outro-lockup",
     # ——— 图文类：承载独立于旁白的「视频内容文案」/ Figure types ———
+    #
+    # ⚠️ **为什么一次补了 7 个**：实测发现「不同文章的图文镜头类型高度雷同」
+    #    根因是**选择空间太小** —— 当时图文类只有 3 个（figure-panel/stat-compare/
+    #    flow-diagram），任何文章都只能从这 3 个里凑，组合必然相似。
+    #
+    #    补的这 7 个各自对应一种**内容形态**（见 prompts/system.md 的形态表），
+    #    而不是"再多几个好看的动效"：
+    #
+    #    icon-grid          并列枚举（无序多项）
+    #    quote-card         单句论断 / 结论
+    #    steps-list         有序步骤（带编号）
+    #    comparison-table   多方案逐项对比（3 项以上）
+    #    layer-stack        分层架构（自下而上）
+    #    progress-meter     部分 vs 总体（覆盖率）
+    #    keyword-highlight  长句里的关键词逐个点亮
     "figure-panel",
     "stat-compare",
     "flow-diagram",
+    "icon-grid",
+    "quote-card",
+    "steps-list",
+    "comparison-table",
+    "layer-stack",
+    "progress-meter",
+    "keyword-highlight",
+    # ——— 素材类补充：两图并排 / Multi-image type ———
+    "image-pair",
 ]
 
 SHOT_TYPES: tuple[str, ...] = (
@@ -56,7 +81,27 @@ SHOT_TYPES: tuple[str, ...] = (
     "figure-panel",
     "stat-compare",
     "flow-diagram",
+    "icon-grid",
+    "quote-card",
+    "steps-list",
+    "comparison-table",
+    "layer-stack",
+    "progress-meter",
+    "keyword-highlight",
+    "image-pair",
 )
+
+# 用素材的镜头类型 / Types that consume an image.
+#
+# 判据（与 prompt 一致）：**有 image 就不写文案，没 image 才写文案**。
+IMAGE_SHOT_TYPES: frozenset[str] = frozenset({
+    "page-spotlight",
+    "scan-annotate",
+    "radar-reveal",
+    "slow-push",
+    "before-after",
+    "image-pair",
+})
 
 # 每种镜头类型必需的字段（校验用）/ Required fields per shot type.
 REQUIRED_FIELDS: dict[str, tuple[str, ...]] = {
@@ -75,6 +120,20 @@ REQUIRED_FIELDS: dict[str, tuple[str, ...]] = {
     "figure-panel": ("text", "bullets"),
     "stat-compare": ("text", "sides"),
     "flow-diagram": ("text", "nodes"),
+    # ——— 本轮补充的 7 个图文形态 + 1 个素材形态 ———
+    # 字段一律**复用**现有结构，不新增数据类型：
+    #   bullets  并列项（每项一个短标签）
+    #   nodes    label + sub 的成对项（步骤/层级）
+    #   sides    带数值的一方（对比表的多列）
+    #   metric   单个数值 + 单位
+    "icon-grid": ("text", "bullets"),          # 并列枚举，bullets 每项一个概念
+    "quote-card": ("text",),                   # 单句论断，subtext 放出处/补充
+    "steps-list": ("text", "nodes"),           # 有序步骤，nodes 顺序即步骤序
+    "comparison-table": ("text", "sides"),     # 多方案对比，sides 每项一个方案
+    "layer-stack": ("text", "nodes"),          # 分层，nodes 从下到上
+    "progress-meter": ("text", "metric"),      # 占比，metric.value 是百分比
+    "keyword-highlight": ("text", "bullets"),  # 长句关键词，bullets 放要突出的词
+    "image-pair": ("image", "image2"),         # 两图并排，image2 是第二张
 }
 
 
@@ -145,6 +204,8 @@ class ShotSpec:
     metric: str = ""
     metrics: list[ShotMetric] = field(default_factory=list)
     image: str = ""
+    # 第二张图（``image-pair`` 用）/ Second image, for ``image-pair`` only.
+    image2: str = ""
     targets: list[ShotTarget] = field(default_factory=list)
     stops: list[ShotStop] = field(default_factory=list)
     source: str = ""
@@ -212,6 +273,7 @@ class VideoSpec:
                     "metric": s.metric,
                     "metrics": [asdict(m) for m in s.metrics],
                     "image": s.image,
+                    "image2": s.image2,
                     "targets": [asdict(t) for t in s.targets],
                     "stops": [asdict(t) for t in s.stops],
                     "source": s.source,
@@ -268,6 +330,7 @@ class VideoSpec:
                         for m in (s.get("metrics") or [])
                     ],
                     image=str(s.get("image") or ""),
+                    image2=str(s.get("image2") or ""),
                     targets=[
                         ShotTarget(
                             x=float(t.get("x", 0)),
