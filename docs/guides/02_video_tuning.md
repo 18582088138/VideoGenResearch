@@ -22,6 +22,7 @@
 | [9](#9-新增一个镜头类型) | 新增一个镜头类型 | 想加全新画面 |
 | [10](#10-配色) | 配色 | 换主题色 |
 | [11](#11-踩坑清单) | 踩坑清单 | **改完没效果 / 渲染炸了** |
+| [12](#12-动效卡用法video-shotcraft) | **动效卡用法**：读卡顺序、参数表、卡名校验、参数化判断 | **想让动效更精美时** |
 
 ---
 
@@ -31,7 +32,9 @@
 cd C:\Users\75203\Downloads\xkd\VideoGenResearch-deepseek\remotion
 
 # ① 看单帧（秒级，不编码，最常用）
-npx remotion still src/index.ts ShortPortrait ..\out\qa\probe.png --frame=560
+#    --props 必须传**绝对路径**（子进程 cwd 是 remotion/）
+npx remotion still src/index.ts SetLandscape ..\out\<素材集>\<kind>\qa\probe.png `
+  --props="C:\...\out\<素材集>\<kind>\storyboard\props_short_landscape.json" --frame=190
 
 # ② 开可视化预览，拖时间轴实时看（改代码自动热更新）
 npx remotion studio src/index.ts
@@ -415,8 +418,142 @@ $py = "C:\Users\75203\miniforge3\envs\ov_env_py312\python.exe"
 | 字幕与画面文字叠在一起 | 收尾镜旁白本身就是 CTA | 收尾镜不铺字幕（`CaptionTrack` 的 `excludeRanges`） |
 | 抽帧看到数字是错的 | 抽在了动画**中途** | 抽在动画落定后（先算锁定帧，再换算秒） |
 | 卡数/时长约束"文档有、实际不生效" | 契约写了但校验器没实现 | **契约写了就必须有代码兜底**，并补单测 |
+| **改了 `TUNING` 但画面没变** | 组件没读它（本项目曾有 11 个旋钮全是零引用的死配置） | 新增配置项**必须立刻接上消费者**，否则就是假配置 |
+| **素材被裁切 / 压住文案** | Ken-Burns 的 `scale` 没在适配时预留空间（`zoom 1.28` × 素材本就溢出 5% = 宽度达画布 148%） | 适配尺寸要 `/ zoomMax` 预留；或分两层（视窗层不加 transform） |
+| **`scale` 加了但 `overflow:hidden` 不起作用** | CSS 把 `transform` 与裁切边界一起缩放 | 视窗层与缩放层**必须分开** |
+| **同一画面重复播两三遍** | 镜数不足 → 校验器把每镜撑过 5s → 强制切分 → 复制内容 | prompt 里给自检公式：`镜数 ≥ ⌈总帧 ÷ 150⌉` |
+| **素材镜头写文案反而更差** | 文案占位把素材缩小，那行字也因缺乏对比读不响 | **有 `image` 就不写文案**（素材 + 动效即完整一镜） |
+| **分镜片段目录混着两版** | 重新规划后镜头编号重排，旧片段没清 | 导出前清空目标目录；用 `manifest.json` 对照 |
+| **数字在屏幕上写成中文** | 旁白是 TTS 合成（读「百分之四十六」），ASR 回来也是中文数字，模型跟着抄 | `videogen/numbers.py` 在服务端统一规范化；**只转真数值**（一起/一致 要保护） |
+| 找产物要翻四个顶层目录 | 同一套产物散在多处（成片、抽帧、中间 props 各一处） | 固定结构 `out/<素材集>/<kind>/{video,shots,subtitles,storyboard,qa,logs}`，定义在 `paths.py` |
+| **分镜片段导出全报错**：`durationInFrames was evaluated to be 1490, but frame range 1401-1544 is not inbetween 0-1489` | Remotion **校验 `--frames` 用的是 Composition 的静态 `durationInFrames`，不是 `calculateMetadata` 算出的值**。成片渲染正常（时长由 props 决定），只有分镜片段会炸 | 把 `SetLandscape`/`SetPortrait` 的静态 `SHORT_FRAMES`/`MID_FRAMES` 设成**足够大的上限**（30000）；真实时长永远来自 props |
+| **同一画面播两遍**（一支 15 镜的视频里 11 镜重复） | 模型给了多个 5.5s 的镜头 → 超 5s 上限 → 被切分成两段，两段内容相同 | 新增**全局再平衡** `_rebalance_ceiling`：把超限镜头削到 150 帧，盈余**全局**分给有余量的镜头（旧实现只借相邻镜头，而模型常连续给多个超限镜头，邻居也没余量 → 一个都借不到） |
+| **末镜变成 550 帧** | 在 `_relayout` 里把均摊上限钳到 `MAX_SHOT_FRAMES` → 均摊被砍出差额 → drift 补偿把差额全堆到末镜 | **分工要清楚**：`_relayout` 只负责**总时长守恒**（钳到 `ABSOLUTE_MAX`），「削到 5 秒」是 `_rebalance_ceiling` 的职责 |
+| **再平衡后总时长对不上音频** | 容量不足时（`总帧 > 镜数 × 150`）硬做再平衡 → 池子分不完 → 帧被丢掉 | 容量检查必须**放在削减之前**；容量不足时**什么都不做**，交给切分（此时切分是必然的，不是浪费） |
+| `argparse: argument --kind: not allowed with argument --set` | `asr_subtitles.py` 的 `--kind`/`--set`/`--audio` 是**互斥组** | 封装脚本调用时只传 `--set`；写封装脚本务必先跑 `--dry-run` 验证命令行 |
+| 素材集名长得离谱（`H3-World-开源基于-MiniMax-H3-构建的交互式世界模型-让-Mi`） | `slugify` 的 `max_len=64` 对中文标题太宽松 | 用 `import_article.py --name <短名>` 指定；或导入后直接重命名目录（**标注会保留，不用重花钱**） |
 
 ---
+
+## 12. 动效卡用法（video-shotcraft）
+
+> 本节回答一个问题：**怎么把 video-shotcraft 的 157 张动效卡真正用进视频里，
+> 而不是只抄个卡名。**
+
+### 12.1 卡在哪里、长什么样
+
+```
+C:\Users\75203\Downloads\xkd\video-shotcraft\references\shots\<类别>\<卡名>.md
+```
+
+10 个类别共 157 张：`opening`(11) / `typography`(26) / `camera`(10) / `data`(13) /
+`ui-entrance`(28) / `interaction`(15) / `effects`(17) / `transition`(19) /
+`rhythm`(11) / `outro`(7)。
+
+每张卡的固定结构：
+
+```markdown
+---
+name: odometer-digit-roll
+一句话: 里程表数字滚动大字报——每位像老虎机滚轮独立纵向滚动带残影…
+适用: 单个王牌指标的全屏亮相（"10x"/"99.98%"级）
+时长: 滚动+逐位锁定 ~63f + 脉冲 8f + hold ≥45f，约 5s
+能量: 中高
+标签: typography
+---
+
+## 意图        为什么这么设计、和哪些卡分工
+## 动效核心    伪代码公式（p = seg(t0, i·gap, …)、三通道绑同一个 p）
+## 参数表      三列：参数 / 典型值 / 调节手感   ← **卡的价值主要在这里**
+## 已知坑      必须遵守的约束
+## 参考实现    指向 demos/<类别>/<卡名>/*.tsx（调校过的参数真相）
+```
+
+### 12.2 读卡的正确顺序（**只读 frontmatter 是不够的**）
+
+本项目曾经**只读 frontmatter 建索引**（`scripts/build_shot_catalog.py`），
+那等于只消费了「卡名 + 一句话」，卡的能力一点没吃到。正确顺序是：
+
+| 顺序 | 读什么 | 为什么 |
+|---|---|---|
+| 1 | `frontmatter` | 筛卡：能量档 / 时长 / 适用场景 |
+| 2 | **`## 参数表`** | **拿数值**：这张卡的动效精度全在这三列里 |
+| 3 | **`## 动效核心`** | 理解公式结构（几段、哪些通道绑同一个进度变量） |
+| 4 | **`## 已知坑`** | 避免卡已经标注过的错误 |
+| 5 | `## 参考实现` 指向的 demo TSX | 参数真相（文字描述是起点，代码是定稿） |
+
+### 12.3 参数表怎么用：一个真实案例
+
+`odometer-digit-roll` 的参数表（节选）：
+
+| 参数 | 典型值 | 调节手感 |
+|---|---|---|
+| 字号/字体 | 190px fw800 + `fontVariantNumeric: tabular-nums` | 非等宽数字每滚一格整行抖动 |
+| 错峰 | `20+i×7f` 起停，从左到右 | 从右往左停读作倒着算；同时停失去"哒哒哒" |
+| **过冲** | **+0.5 行再 6f 弹回** | **无过冲读作滑到即停，机械感减半** |
+| 残影 | 2 副本 0.25/0.12，速度门控 | 3+ 副本高速下糊成一条 |
+| 终值脉冲 | 加深 + 1.035 缩放 8f | 只加深不缩放在 190px 黑字上不可感 |
+| 收尾 | 脉冲归零后真静止 ≥45f | R1 |
+
+**教训**：`NumberRoll.tsx` 的注释写着「逐位过冲锁定」，但实现里**没有过冲** ——
+注释声称做了，代码没做。这类「照语义手写」必然丢掉卡调校过的精度。
+
+改法与验证：
+
+```tsx
+// 两段式落位：先过冲半格，再 6f 弹回整数（卡的原参数）
+const rollT   = interpolate(frame, [start, start + 16], [0, 1],
+                            { easing: Easing.bezier(0.25, 0.8, 0.25, 1) });
+const settleT = interpolate(frame, [start + 16, start + 22], [0, 1],
+                            { easing: Easing.inOut(Easing.quad) });
+const posLines = (10 + target + 0.5) * rollT - 0.5 * settleT;  // 过冲 0.5 行
+```
+
+### 12.4 卡名必须过索引校验（这条是硬规则）
+
+**所有卡名必须能在 157 张索引里查到**，否则就是幻觉。
+
+> 反例：`VideoGenResearch-minimax` 的 `ShortVideo.tsx` 里写了
+> `data/digit-roll-flip`、`data/radial-data-grid`、`outro/call-to-action` ——
+> 这些卡**都不存在**（真实名是 `odometer-digit-roll` 等）。
+> 它没走 `library.json` 校验，于是"用 shotcraft"只停在文档层。
+
+本项目的校验入口：`src/videogen/shot_catalog.py` 加载
+`assets/shot_catalog.json`（由 `scripts/build_shot_catalog.py` 生成）。
+
+### 12.5 「参数化 157 张卡」能让我自动选到好动效吗
+
+**能选，但有前提；收益主要来自参数精度，不是卡的数量。**
+
+| 部件 | 作用 | 现状 |
+|---|---|---|
+| 语义索引 | AI 凭什么选这张卡 | ✅ 已有（157 张 frontmatter） |
+| **参数表** | 选完之后怎么实现 | ❌ 缺失（要抽成结构化 JSON） |
+| **组件实现** | 参数落地的载体 | ⚠️ 只有 13 个 `ShotType` |
+
+**关键限制**：卡有 157 张、组件只有 13 个。若把 157 张卡全放进候选却不扩组件，
+AI 会选出一批**渲染不了的卡** —— 这正是 minimax 的失败模式。
+
+**务实路径**：
+
+1. **先把已实现的 13 个镜头对应卡的参数补全**（可验证、可加测试）；
+2. 再把 157 张卡的 `## 参数表` 抽成结构化 JSON，作为**选择依据**进 prompt；
+3. **新卡必须同时落地组件**才能进候选；
+4. 加一条测试断言「组件声明的参数与卡一致」——
+   这是唯一能防住"注释说做了、代码没做"的办法。
+
+### 12.6 已落地的卡与实现对应表
+
+| 组件 | 依据的卡 | 已遵守的命门 |
+|---|---|---|
+| `ui/DigitRoll.tsx` | `odometer-digit-roll` | `tabular-nums`、逐位错峰、**过冲 +0.5 行 / 6f 弹回** |
+| `shots/NumberRoll.tsx` | 同上 | 终值脉冲（加深 + 1.035 缩放 8f）、收尾真静止 ≥45f |
+| `shots/ScanAnnotate.tsx` | `scanline-*` 系 | 扫描线匀速 + 命中定框；标注框 `settle` 1.75→1 的"对准"过冲 |
+| `shots/TitleReveal.tsx` | `typography` 系 | 字距结晶 + 逐字解锁 |
+| `shots/TimelineTravel.tsx` | `rhythm` 系 | 相机跟随式横移 + 刻度错峰 pop + 卡片弹立 |
+
+> **未实现的参数**（待办）：`odometer-digit-roll` 的**残影** ——
+> 2 个错帧副本、`opacity 0.25/0.12`、按相邻帧速度门控、停稳自动摘。
 
 ## 附：常用帧号换算
 
