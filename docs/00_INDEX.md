@@ -57,17 +57,31 @@
 
 | 文档 | 内容 | 什么时候加载 |
 |---|---|---|
-| [guides/00_dev_principles.md](guides/00_dev_principles.md) | 开发守则（用户口径 + 省 token 习惯） | 首次接手 |
+| [guides/00_dev_principles.md](guides/00_dev_principles.md) | 开发守则（用户口径 + 省 token 习惯）。**§5.1 是 `git_commands.md` 的更新机制** | 首次接手 / 写 git 指令前 |
 | [guides/01_remotion_guide.md](guides/01_remotion_guide.md) | Remotion 工程上手：3 条硬规则、命令、结构、设计决定、待修项 | 跑工程 / 换机器 / 渲染报错时 |
 | [guides/02_video_tuning.md](guides/02_video_tuning.md) | **视频制作调参手册**：改哪个文件/哪个值、值变大变小会怎样、版式、动效、新增镜头、踩坑清单 | **动手调风格前必读** |
 | [03_unit_tests.md](03_unit_tests.md) | 测试总览 + 按改动定位该跑哪个节点 + 复测指令 | 想知道跑哪个测试时 |
-| `guides/03_*.md` … | 复现/新增镜头卡的操作步骤 | 按需 |
+
+### 4.1 多素材集工作流（换一篇文章）
+
+素材按**目录**组织，不在代码里写死：`assets/sets/<name>/`。
+完整流程见 [issues/006](issues/006-new-article-compatibility-gaps.md)，三步命令：
+
+```powershell
+& $py scripts\import_article.py "<DailyNewsAssistant 产物目录>"
+& $py scripts\asr_subtitles.py --set <name>
+& $py scripts\plan.py --set <name>          # 1 次 LLM 调用
+& $py scripts\render_set.py --set <name>    # 两个方向出片，零费用
+```
+
+> ⚠️ **唯一需要人工介入的一步**：`images/index.json` 的图片语义标注
+> （原始抓取元数据 caption 全为 null，无法自动生成）。它是规划质量的主要输入。
 
 ### 7. 验证证据（out/qa）
 
-渲染自检静帧（每次改镜头后的产物归档处）：`out/qa/`。
-当前 11 张，覆盖短视频与中视频的横竖屏各镜头。
-**这是沙箱内唯一可行的视觉验收手段**（整片渲染需沙箱外执行，见 issues/005）。
+渲染自检静帧（每次改镜头后的产物归档处）：`out/qa/` 与 `out/<素材集>/qa/`。
+**这是最快的视觉验收手段**；整片渲染耗时约 4 分钟/方向，配置见
+[guides/02_video_tuning.md](guides/02_video_tuning.md) §1。
 
 ### 5. 问题记录（issues）
 
