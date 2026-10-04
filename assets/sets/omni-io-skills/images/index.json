@@ -1,58 +1,106 @@
 {
   "set": "omni-io-skills",
-  "note": "人工判读的语义标注（原始抓取的 caption 全为 null）。尺寸由 Pillow 实测，非手抄。",
+  "note": "由 scripts/annotate_images.py 自动标注；建议人工复核后再正式出片。",
   "assets": [
     {
       "file": "01_arxiv-org.png",
       "width": 1672,
       "height": 941,
-      "aspect": 1.777,
-      "role": "概念总览 / concept overview",
-      "kind": "架构图 / architecture diagram",
-      "label": "Omni-IO Skills 全貌",
-      "description": "论文首图。中央是蓝色吉祥物智能体，左右两侧分列 Omni Modalities（TEXT/IMAGE/VIDEO/AUDIO/DOCUMENT/3D 六类，加代码共七种模态）与 Omni Tasks（UNDERSTANDING/GENERATION/REASONING/RETRIEVAL 四类任务）；底部三根支柱：SKILLS（ATOMIC/EXPERT/SCENARIO 三层）、DECLARE EXECUTION GRAPH（声明式执行图）、ASSET REGISTRY（资产登记表）；顶部横幅即论文标题 Omni-IO Skills。",
-      "narrative_use": "开场建立全貌认知：一张图同时说明「七种模态」「四类任务」「三层技能」「三根支柱」。适合做首个内容镜头，让观众一眼看到论文的完整主张。",
-      "suggested_shots": ["page-spotlight", "scan-annotate"],
-      "notes": "信息密度极高，竖屏必须放大局部（用 scan-annotate 框选底部三支柱），整图直出在竖屏会看不清文字。"
+      "aspect": 1.7768,
+      "role": "概念总览",
+      "kind": "示意图",
+      "label": "Omni-IO Skills",
+      "description": "这张图展示了Omni-IO技能的不同方面，包括输入输出模式（如文本、图像、视频等）、任务类型（如理解、生成、推理、检索）、技能等级（如原子级、专家级、场景级）、执行图和资产注册。",
+      "narrative_use": "这张图适合放在科技短视频的开头，用来介绍Omni-IO技能的整体架构和功能，观众可以从中看到Omni-IO技能的多样性和复杂性。",
+      "suggested_shots": [],
+      "observed_labels": [
+        "Omni Modalities",
+        "Omni Tasks",
+        "Skills",
+        "Declare Execution Graph",
+        "Asset Registry"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
     },
     {
       "file": "02_arxiv-org.png",
       "width": 2023,
       "height": 667,
       "aspect": 3.033,
-      "role": "能力分层 / skill taxonomy",
-      "kind": "分类图 / taxonomy panel",
-      "label": "技能三层与六类场景",
-      "description": "三栏并列：左栏 Scenario Skills 列六个具体场景（社媒海报、办公文档、求职材料、教育分享、活动物料、游戏资产）；中栏 Expert Skills 列两项完整制作流程（海报设计、复杂视频制作）；右栏 Atomic Skills 按能力分组（Understand / Generate / Utility），每组下方是一排模态图标。",
-      "narrative_use": "把口播里的「19 个原子技能 / 2 个专家技能 / 6 个场景技能」落实成可见的分类，说明分层不是概念而是有具体清单。",
-      "suggested_shots": ["page-spotlight", "before-after"],
-      "notes": "超宽图（3.03:1），竖屏裁切会丢掉两侧，适合横屏或配合横向平移动效。"
+      "role": "概念总览",
+      "kind": "示意图",
+      "label": "技能分类图",
+      "description": "这张图展示了三种不同类型的技能：情景技能、专家技能和原子技能。情景技能包括社交媒体帖子、办公文档、求职申请、教育分享、活动材料和游戏资产。专家技能包括海报设计和复杂视频制作。原子技能包括理解、生成和实用功能，如搜索和浏览。",
+      "narrative_use": "这张图适合用来讲解不同技能类型的分类及其具体应用场景，帮助观众理解各类技能的具体内容和用途。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "Scenario Skills",
+        "Expert Skills",
+        "Atomic Skills"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
     },
     {
       "file": "03_arxiv-org.png",
       "width": 2005,
       "height": 781,
-      "aspect": 2.567,
-      "role": "流程机制 / pipeline mechanism",
-      "kind": "流程图 / flow diagram",
-      "label": "从用户提问到分波执行的完整链路",
-      "description": "上半部分：Input Assets → User Query（用户提出生成物料需求）→ Skill Planning（Select Skills 选中 S5 场景技能 → Hierarchical Expansion 展开为 E1/E2 专家技能与 A1/A6/A7/A9/A16 原子技能）→ DEG（Construct & Validate，把技能组成带依赖的有向图并跑校验规则）。下半部分：Per-Node Execution Loop（Route 路由 → Provider 供应商 → Injection 参数注入 → Execute 执行）与 Wave Scheduling（Wave 0 参考图分析 → Wave 1 海报素材 + Wave 2 视频与音效 → Wave 3 落地页），左侧 Asset Registry 与 Cross-turn Reuse 承接成功产物。",
-      "narrative_use": "论文机制的核心图。用来讲「分层展开」「按依赖分波并行」「参数自动注入」「产物登记复用」这四件事，是全片信息量最大的一个镜头。",
-      "suggested_shots": ["scan-annotate", "flow-diagram", "slow-push"],
-      "notes": "最适合做机制讲解镜头。竖屏建议用 scan-annotate 分两次框选（先上半 Skill Planning，再下半 Wave Scheduling）。"
+      "aspect": 2.5672,
+      "role": "方法机制",
+      "kind": "流程图",
+      "label": "产品推广材料生成流程",
+      "description": "该图展示了用户查询输入资产后，通过技能规划和执行节点循环，最终生成推广材料的流程。包括技能选择、分层扩展、验证规则和分阶段生成不同类型的推广材料。",
+      "narrative_use": "这张图展示了从用户查询到最终生成推广材料的完整流程，适合用来讲解自动化内容生成系统的运作机制。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "User Query",
+        "Input Assets",
+        "Skill Planning",
+        "Select Skills",
+        "Hierarchical Expansion",
+        "DEG",
+        "Construct & Validate",
+        "Per-Node Execution Loop",
+        "Wave Scheduling"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
     },
     {
       "file": "04_arxiv-org.png",
       "width": 1375,
       "height": 726,
-      "aspect": 1.894,
-      "role": "实测案例 / worked example",
-      "kind": "对话截图 / conversation transcript",
-      "label": "两个真实任务的产物对照",
-      "description": "两个案例的对话记录。案例一是「艺术教程创作」：用户要求根据视频与音频生成含 11 张图的教程，产物用 <image1>…<image11> 逐个引用。案例二是「产品推广」：用户要求为 Owala FreeSip 水壶做一张 4:5 海报、一段精确 10 秒的 9:16 促销 MP4 与一个自包含 HTML 落地页，产物分别以 <image6>、<video1>、<code1> 引用。每行右侧是该案例的产物缩略图。",
-      "narrative_use": "证明这套外壳能真的交付多模态产物，而且「资产登记表」让产物可以按 ID 被逐轮引用 —— 正是口播里「下一轮只改一部分、不必重做全部」的证据。",
-      "suggested_shots": ["page-spotlight", "scan-annotate"],
-      "notes": "文字很小，竖屏必须放大局部才能看清 <image1> 这类引用符号。"
+      "aspect": 1.8939,
+      "role": "概念总览",
+      "kind": "流程图",
+      "label": "多媒体教程和产品推广",
+      "description": "这张图展示了如何通过视频、音频和图片教程来教授绘制韩国夜市街景的步骤，并介绍了如何使用这些素材来推广Owala FreeSip水瓶的产品。",
+      "narrative_use": "这张图适合放在科技短视频的开头，用来介绍多媒体教程和产品推广的整体流程，观众可以从中看到如何通过多种媒体形式进行教学和产品推广。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "video1",
+        "audio1",
+        "image1",
+        "image2",
+        "image3",
+        "image4",
+        "image5",
+        "image6",
+        "image7",
+        "image8",
+        "image9",
+        "image10",
+        "image11",
+        "code1"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "name": "spark-x2",
+  "title": "Spark-X2.5开源4B与1.7B模型",
+  "subtitle": "上下文1048576，适配SGLang与vLLM",
+  "narration": "XHToken开源智能体模型Spark-X2.5，含4B与1.7B两个版本，上下文长度1048576。推荐采样参数temperature=1.0、top_p=0.95、top_k=-1，所有评测在思考模式下进行。部署已适配SGLang、vLLM、MLX、llama.cpp与Ollama，SGLang镜像为lmsysorg/sglang:nightly-dev-cu13-20260827-20621aa1，tool-call-parser用spark25，reasoning-parser用qwen3。聊天模板默认开启思考，单次请求可用chat_template_kwargs设enable_thinking为false关闭。评测含Gaokao 2026，由2026年高考数学全国卷I、全国卷II、北京卷、上海卷、天津卷五套卷组成，满分150分。关注我，下期分享AI行业最新进展！",
+  "source": "C:\\Users\\75203\\Downloads\\xkd\\DailyNewsAssistant\\outputs\\articles\\20260919\\Spark-X2-5开源4B-1-7B-智能体模型-探索端侧大模型的智能体能力上__d49afa69",
+  "source_label": "mp.weixin.qq.com",
+  "images_copied": 5
+}

@@ -1,0 +1,187 @@
+{
+  "set": "h3-world",
+  "note": "由 scripts/annotate_images.py 自动标注；建议人工复核后再正式出片。",
+  "assets": [
+    {
+      "file": "01_mmbiz-qpic-cn.jpg",
+      "width": 1016,
+      "height": 432,
+      "aspect": 2.3519,
+      "role": "概念总览",
+      "kind": "示意图",
+      "label": "虚拟世界场景",
+      "description": "这张图展示了四个不同的虚拟世界场景，分别是雪山、城市、沙漠和温室。每个场景都有独特的视觉风格和氛围，代表了多样化的虚拟世界环境。",
+      "narrative_use": "这张图适合用来展示虚拟世界的多样性和丰富性，说明在不同场景下的游戏体验和视觉效果。",
+      "suggested_shots": [
+        "page-spotlight",
+        "slow-push"
+      ],
+      "observed_labels": [
+        "H3-WORLD",
+        "雪山",
+        "城市",
+        "沙漠",
+        "温室"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "02_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 574,
+      "aspect": 1.77,
+      "role": "概念总览",
+      "kind": "示意图",
+      "label": "虚拟世界场景",
+      "description": "这张图展示了四个不同的虚拟世界场景，分别是雪山、城市、沙漠和温室。每个场景都有独特的视觉风格和氛围，代表了不同的环境和背景。",
+      "narrative_use": "这张图适合用来展示虚拟世界的多样性和丰富性，观众可以从中看到不同环境和背景的精美画面，感受虚拟世界的广阔和魅力。",
+      "suggested_shots": [
+        "page-spotlight",
+        "slow-push"
+      ],
+      "observed_labels": [
+        "H3-WORLD",
+        "雪山",
+        "城市",
+        "沙漠",
+        "温室"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "03_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 428,
+      "aspect": 2.3738,
+      "role": "方法机制",
+      "kind": "示意图",
+      "label": "角色行为与相机控制对比",
+      "description": "这张图展示了角色行为和相机控制的不同效果。左侧是角色行为的变化，右侧是相机控制的变化。通过对比可以看出角色在不同行为下的表现以及相机在不同控制下的视角变化。",
+      "narrative_use": "这张图适合用来讲解游戏中角色行为和相机控制的互动关系，观众可以从中看到角色在不同行为下的表现以及相机在不同控制下的视角变化，这在其他地方难以直观展示。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "Character Behavior",
+        "Camera Control"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "04_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 474,
+      "aspect": 2.1435,
+      "role": "方法机制",
+      "kind": "示意图",
+      "label": "游戏控制演示",
+      "description": "这张图展示了在不同游戏场景中，玩家如何使用键盘上的WASD和JKL键来控制角色的动作。上半部分是一个现实风格的场景，下半部分是一个科幻风格的场景。每个场景都展示了角色在不同视角下的动作。",
+      "narrative_use": "这张图适合放在介绍游戏控制机制的短视频中，用来展示玩家如何通过键盘控制角色在不同场景中的移动和动作。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "SEEN ACTION",
+        "UNSEEN ACTION",
+        "WASD",
+        "JKL"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "05_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 247,
+      "aspect": 4.1134,
+      "role": "方法机制",
+      "kind": "示意图",
+      "label": "摄像机运动示例",
+      "description": "这张图展示了两种不同的场景：村庄街道和榻榻米大厅。每个场景都有相应的摄像机运动方式描述。上半部分展示了摄像机快速向左平移的场景，下半部分展示了摄像机跟随角色前进的场景。",
+      "narrative_use": "这张图适合用来讲解摄像机运动在游戏中的应用，帮助观众理解不同场景下摄像机运动的差异和效果。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "Village Street",
+        "Tatami Hall",
+        "The man quickly walks forward while the camera pans left rapidly.",
+        "The samurai quickly walks forward with long strides while the camera follows him."
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "06_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 729,
+      "aspect": 1.3937,
+      "role": "方法机制",
+      "kind": "流程图",
+      "label": "H3-World sequence",
+      "description": "该图展示了如何构建H3-World序列，包括视觉流和动作流的编码过程，以及H3块的适应和LoRA在H3自注意力中的应用。",
+      "narrative_use": "这张图适合放在科技短视频中，用来讲解H3-World序列的构建过程及其内部机制，观众可以从中看到H3编码器和LoRA的具体应用。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate",
+        "slow-push"
+      ],
+      "observed_labels": [
+        "Build the packed H3-World sequence",
+        "Adapt the H3 block",
+        "LoRA inside H3 self-attention"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "07_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 522,
+      "aspect": 1.9464,
+      "role": "方法机制",
+      "kind": "表格",
+      "label": "角色动作指令矩阵",
+      "description": "这张图展示了一个角色动作指令矩阵，结合了摄像机的跟踪和移动指令。每个单元格显示了不同动作指令组合下的计数数据。",
+      "narrative_use": "这张图适合放在科技短视频中，用来解释角色动作指令与摄像机移动指令之间的关系，以及这些指令在不同组合下的使用频率。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "Stand still",
+        "Forward",
+        "Backward",
+        "Strafe left",
+        "Strafe right",
+        "Forward + left",
+        "Forward + right",
+        "Backward + left",
+        "Backward + right"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "08_mmbiz-qpic-cn.png",
+      "width": 1016,
+      "height": 481,
+      "aspect": 2.1123,
+      "role": "方法机制",
+      "kind": "流程图",
+      "label": "方法机制",
+      "description": "这张图展示了四种不同方法（GT, Additive bias, FILM, H3-WORLD）在处理同一场景时的效果对比。通过对比可以看出不同方法在处理相机控制和运动时的差异。",
+      "narrative_use": "这张图适合放在科技短视频中，用来讲解不同方法在处理相机控制和运动时的效果差异。观众可以从中看到每种方法的优缺点以及在实际应用中的表现。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "GT",
+        "Additive bias",
+        "FILM",
+        "H3-WORLD"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    }
+  ]
+}

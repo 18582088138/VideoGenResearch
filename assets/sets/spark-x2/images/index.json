@@ -1,0 +1,133 @@
+{
+  "set": "spark-x2",
+  "note": "由 scripts/annotate_images.py 自动标注；建议人工复核后再正式出片。",
+  "assets": [
+    {
+      "file": "01_mmbiz-qpic-cn.jpg",
+      "width": 1280,
+      "height": 543,
+      "aspect": 2.3573,
+      "role": "概念总览",
+      "kind": "页面截图",
+      "label": "开源项目发布",
+      "description": "这张图展示了 Spark-X 2.5 开源项目的发布，重点介绍了 4B 和 1.7B 智能体模型，并强调了探索端侧大模型的智能体能力上限",
+      "narrative_use": "这张图适合放在科技短视频的开头，用来介绍 Spark-X 2.5 开源项目的发布及其主要特点",
+      "suggested_shots": [
+        "page-spotlight"
+      ],
+      "observed_labels": [
+        "Spark-X 2.5 开源",
+        "4B&1.7B 智能体模型",
+        "探索端侧大模型的智能体能力上限"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "02_mmbiz-qpic-cn.jpg",
+      "width": 802,
+      "height": 450,
+      "aspect": 1.7822,
+      "role": "数据对比",
+      "kind": "柱状图",
+      "label": "模型性能对比",
+      "description": "该图展示了多个模型在不同测试基准下的性能表现。每个基准下都有不同模型的得分，通过柱状图进行对比。",
+      "narrative_use": "这张图适合放在科技短视频中，用来展示不同模型在各种任务上的性能对比，帮助观众理解各模型的优劣势。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "r²-bench",
+        "MCP-Atlas",
+        "BrowseComp",
+        "SciCode",
+        "AIME 2026",
+        "HMMT Feb 2026",
+        "HLE",
+        "IFBench"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "03_mmbiz-qpic-cn.png",
+      "width": 800,
+      "height": 600,
+      "aspect": 1.3333,
+      "role": "概念总览",
+      "kind": "架构图",
+      "label": "模型架构与参数",
+      "description": "这张图展示了混合架构的流程图和两个不同规格模型的参数概览。左侧的流程图详细描述了模型的各个组件及其连接方式，包括FFN、Global Attention、Sliding Window Attention等模块。右侧的表格列出了Spark-X2.5-1.7B和Spark-X2.5-4B两个模型的详细参数，包括总参数量、非嵌入层参数量、隐层维度等。",
+      "narrative_use": "这张图适合放在科技短视频中，用来讲解混合架构模型的详细结构和参数对比。观众可以从中看到不同规格模型的具体参数差异，以及混合架构的具体实现方式。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "混合架构",
+        "模型概览",
+        "总参数量",
+        "非嵌入层参数量",
+        "隐层维度",
+        "中间层维度",
+        "总层数",
+        "SWA 层数",
+        "GA 层数",
+        "注意力头数",
+        "KV 头数",
+        "头维度",
+        "RoPE 维度",
+        "上下文长度",
+        "滑动窗口大小",
+        "词表大小"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "04_mmbiz-qpic-cn.png",
+      "width": 785,
+      "height": 265,
+      "aspect": 2.9623,
+      "role": "概念总览",
+      "kind": "流程图",
+      "label": "模型训练流程",
+      "description": "这张图展示了模型训练的三个主要步骤：监督微调、领域专家训练和多教师策略蒸馏。每个步骤都有详细的子步骤和流程。",
+      "narrative_use": "这张图适合放在科技短视频的开头，用来介绍模型训练的总体流程和各个步骤之间的关系。",
+      "suggested_shots": [
+        "page-spotlight",
+        "slow-push"
+      ],
+      "observed_labels": [
+        "Supervised Fine-Tuning",
+        "Domain Expert Training",
+        "Multi-Teacher On-Policy Distillation"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    },
+    {
+      "file": "05_mmbiz-qpic-cn.png",
+      "width": 761,
+      "height": 1372,
+      "aspect": 0.5547,
+      "role": "数据对比",
+      "kind": "表格",
+      "label": "模型性能对比",
+      "description": "这张图表展示了多个AI模型在不同测试中的性能评分，包括BFCL-V4、τ²-bench、MCP-Atlas等。每个模型在不同测试中的得分有所不同，反映了它们在不同任务中的表现差异。",
+      "narrative_use": "这张图表适合用来展示不同AI模型在各种测试中的性能对比，帮助观众理解各模型的优劣势。",
+      "suggested_shots": [
+        "page-spotlight",
+        "scan-annotate"
+      ],
+      "observed_labels": [
+        "Spark-X2.5-4B",
+        "Spark-X2.5-1.7B",
+        "Qwen3.5-9B",
+        "Qwen3.5-4B",
+        "Qwen3.5-2B",
+        "Gemma4-12B",
+        "Gemma4-E4B",
+        "Gemma4-E2B"
+      ],
+      "notes": "由视觉模型自动标注（minimax:MiniMax-Text-01），建议人工复核后再用于正式出片"
+    }
+  ]
+}

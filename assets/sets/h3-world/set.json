@@ -1,0 +1,9 @@
+{
+  "name": "H3-World-开源基于-MiniMax-H3-构建的交互式世界模型-让-Mi",
+  "title": "H3-World 开源：H3 加角色相机控制",
+  "subtitle": "8k 数据 0.199% 参数，LoRA 微调实现交互式世界模型",
+  "narration": "H3-World 开源，首个基于 MiniMax-H3 构建的交互式世界模型。只用 8,000 段视频、0.199% 可训练参数做 rank-32 LoRA 微调，就加上角色与相机控制。做法是把 W、A、S、D 角色键和 I、J、K、L 相机键转成文本指令，沿用 MiniMax-H3 文本处理路径，再用定向注意力把每条指令对齐到对应视频潜变量区间，不新增动作控制模块。9 类角色指令加 16 类相机指令共 135 种组合，训练覆盖 83 种，其余 52 种未出现组合也能生成。对比按键向量直接相加和 FiLM 缩放平移，这两种方式动作响应偏弱或不一致，H3-World 的文本动作接口生成了协调的角色与相机变化。关注我，下期分享 AI 行业最新进展！",
+  "source": "C:\\Users\\75203\\Downloads\\xkd\\DailyNewsAssistant\\outputs\\articles\\20261004\\H3-World-开源基于-MiniMax-H3-构建的交互式世界模型-让-Mi__1a7bd79e",
+  "source_label": "mp.weixin.qq.com",
+  "images_copied": 8
+}
