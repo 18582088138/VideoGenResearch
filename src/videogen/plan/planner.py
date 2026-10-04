@@ -53,25 +53,76 @@ def load_prompt(name: str) -> str:
 
 
 def build_catalog(cards: list[ShotCard]) -> str:
-    """由镜头卡索引生成 catalog 文本 / Render the catalog from the card index.
+    """生成「可用动效」清单 / Render the list of usable shot types.
 
-    **不手写** —— 手写的 catalog 会与实现漂移，这是本项目明确要避免的
-    （「一个概念只在一处写权威」）。
+    ⚠️ **这里刻意不再列 157 张动效卡的名字。**
+
+    实测数据：卡库 157 张，可落地的 ``type`` 21 个，**两者交集只有 1 个**
+    （只有 ``timeline-travel`` 同名）。也就是说 ``brand-ink-open``、
+    ``crane-rise-reveal`` 这些卡名**不是合法的 type 值** ——
+    把它们列给模型看，等于递一份「看得见、选不了」的清单。
+
+    这正是「不同文章的图文镜头高度雷同」的根因之一：模型的选择空间实际只有
+    21 个 type 中的文案类，而不是 157 张卡。
+
+    现在改为**按类别列出真正可用的 type**，形态与选择规则见 system.md 的
+    「内容形态库」。卡库仍作为**设计参考**保留在仓库里
+    （``assets/shot_catalog.json``），但不再进 prompt —— 除非将来把
+    「卡 → 组件」的映射补齐。
+
+    Why the 157 cards are no longer listed: their names are not valid ``type``
+    values, so listing them only misleads the planner.
     """
+    from videogen.spec import IMAGE_SHOT_TYPES, SHOT_TYPES
+
+    groups: list[tuple[str, tuple[str, ...]]] = (
+        (
+            "字标类（不用素材）",
+            ("title-reveal", "outro-lockup"),
+        ),
+        (
+            "素材类（**必须给 image，且按口径不写文案**）",
+            tuple(t for t in SHOT_TYPES if t in IMAGE_SHOT_TYPES),
+        ),
+        (
+            "数值类（不用素材）",
+            ("number-roll", "counter-burst", "stat-compare", "progress-meter"),
+        ),
+        (
+            "文案类（不用素材，承载图里没有的信息）",
+            tuple(
+                t
+                for t in SHOT_TYPES
+                if t not in IMAGE_SHOT_TYPES
+                and t
+                not in {
+                    "title-reveal", "outro-lockup", "number-roll",
+                    "counter-burst", "stat-compare", "progress-meter",
+                }
+            ),
+        ),
+    )
+
     lines = [
-        "# 可用镜头卡 / Available shot cards",
+        "# 可用动效 / Available shot types",
         "",
-        "以下是全部可用卡片的元数据。**你只能从中选择 `type`（见 system 的对照表）**，",
-        "不要发明新的 type。",
+        f"本项目实现了 **{len(SHOT_TYPES)} 种动效**。`type` 字段必须严格取下面之一，",
+        "**不要发明新 type**。每种动效适合什么内容形态、怎么挑，见 system 的「内容形态库」。",
         "",
-        "| 卡名 | 类别 | 一句话 | 建议时长 | 能量 |",
-        "|---|---|---|---|---|",
     ]
-    for c in cards:
-        summary = c.summary.replace("|", "\\|")
-        duration = c.duration.replace("|", "\\|")
-        energy = c.energy.split("（")[0]
-        lines.append(f"| `{c.name}` | {c.category} | {summary} | {duration} | {energy} |")
+    for title, types in groups:
+        if not types:
+            continue
+        lines.append(f"**{title}**")
+        lines.append("")
+        for t in types:
+            lines.append(f"- `{t}`")
+        lines.append("")
+
+    lines += [
+        "> 记住 4.3 的多样性硬规则：同一 type 全片最多 2 次、相邻不同型、",
+        "> 全片至少动用到 5 种不同 type。",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -117,6 +168,15 @@ class PlanRequest:
     images: list[ImageAsset]
     theme: str = "cyan-noir"
     aspect: str = "both"
+    # 文章正文 / Full article text.
+    #
+    # **为什么需要它**：图文类镜头的职责是承载「图里没有、文章里有的关键信息」
+    # （用户口径：不要用分镜凑数，而是梳理文章关键信息，让视频比图片更全面）。
+    # 只给旁白的话，模型看不到文章里那些没被念出来的细节，就无从判断"哪些信息图里没有"。
+    #
+    # The figure shots exist to carry information the images do NOT show. The model
+    # cannot know what that is from the narration alone.
+    article_text: str = ""
 
 
 def build_user_prompt(req: PlanRequest) -> str:
@@ -156,6 +216,7 @@ def build_user_prompt(req: PlanRequest) -> str:
     # 没有余量就会再次触发切分（同一画面重复）。
     shot_hi = max(hi, shot_lo + 3)
 
+    asset_count = len(req.images)
     constraints = {
         "kind": req.kind,
         "fps": req.timeline.fps,
@@ -168,6 +229,8 @@ def build_user_prompt(req: PlanRequest) -> str:
         "shot_duration_max_frames": 150,
         "max_text_chars": 40,
         "max_subtext_chars": 30,
+        # 素材数量：模型据此判断"素材够不够"，够就全用素材、不够才用图文补足
+        "asset_count": asset_count,
         "theme": req.theme,
         "aspect": req.aspect,
     }
@@ -180,7 +243,14 @@ def build_user_prompt(req: PlanRequest) -> str:
         f"（= ⌈{req.timeline.duration_frames} ÷ 150⌉）。"
         f"请规划 **{shot_lo}–{shot_hi} 镜**，并让 `durationInFrames` 之和接近"
         f" {req.timeline.duration_frames}。"
-        f"（{req.timeline.duration_frames} 帧 @ {req.timeline.fps}fps）。",
+        f"\n\n## 排布原则：素材优先，文案补足\n\n"
+        f"我有 **{asset_count} 张素材**。请：\n"
+        f"1. **先为素材安排镜头**，并充分利用 —— 素材可以**复用**："
+        f"同一张图换一种动效、或换一组 `targets` 标注区域，就是另一镜。\n"
+        f"2. **用素材的镜头不要写 `text` / `subtext`**（素材 + 动效本身就是完整一镜）。\n"
+        f"3. **图里没有、文章里有的关键信息**，用 `figure-panel` / `stat-compare` / "
+        f"`flow-diagram` 结构化地讲出来 —— 这**不是凑数**，而是让视频的信息量"
+        f"超过图片本身；这三类的文案**必须具体**（含专有名词或数字）。",
         "## 约束 / Constraints\n\n```json\n"
         + json.dumps(constraints, ensure_ascii=False, indent=2)
         + "\n```",
@@ -200,6 +270,20 @@ def build_user_prompt(req: PlanRequest) -> str:
         "## 主副标题 / Titles\n\n"
         f"主标题：{req.timeline.title or '（未提供）'}\n"
         f"副标题：{req.timeline.subtitle or '（未提供）'}\n",
+        # 文章正文给模型，是为了让它**找出图里没有的关键信息** ——
+        # 图文类镜头要用这些内容，而不是拿旁白凑时长。
+        # 旁白是"被念出来的那一部分"，正文里还有大量没进旁白的机制/参数/结论。
+        *(
+            [
+                "## 文章正文 / Article text\n\n"
+                "旁白是**已经被念出来**的那部分；下面是文章全文，"
+                "其中**图里没画、旁白也没讲**的关键信息（机制拆解、参数、对比结论、流程）"
+                "正是图文类镜头该承载的内容。\n\n"
+                "<article>\n" + req.article_text.strip()[:12000] + "\n</article>"
+            ]
+            if req.article_text.strip()
+            else []
+        ),
         "现在输出符合 system 中格式要求的 JSON 对象。**只输出 JSON。**",
     ]
     return "\n\n".join(parts)
