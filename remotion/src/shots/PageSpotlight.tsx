@@ -14,17 +14,21 @@
  *      按 SKILL.md「允许适配性改动，但已知坑参数不得降档」处理 —— 这里
  *      降的是**构件数量**而非质量参数，且动作弧完整保留）
  *   - 遵守：锁定→落定后真静止（R1）、光效只给主角一次（Q4）
+ *
+ * 用户口径：本镜是「用素材图」的镜头，**渲染时不再输出任何镜头内文案**
+ * （素材图片 + 动效已经足够），因此素材改用 `mediaZoneFull` 全幅素材区。
  */
 
 import React from "react";
 import { Easing, Img, interpolate, useCurrentFrame } from "remotion";
 import { FONT_FAMILY, ThemeTokens } from "../theme/theme";
 import { imageUrl } from '../theme/assetPath';
-import { Layout } from "../theme/layout";
+import { Layout, tune } from "../theme/layout";
 import { fitSize } from "../theme/assetDims";
 
 export interface PageSpotlightProps {
   file: string;
+  // 用户口径：素材镜头不再输出文案 —— 字段保留以维持 Python 侧 spec 契约，渲染时忽略。
   text?: string;
   source?: string;
   theme: ThemeTokens;
@@ -34,14 +38,11 @@ export interface PageSpotlightProps {
 
 export const PageSpotlight: React.FC<PageSpotlightProps> = ({
   file,
-  text,
-  source,
   theme,
   layout,
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  const portrait = layout.orientation === "portrait";
 
   // ── 动作弧：游走(0-24) → 锁定(24-34) → 推近(34-58) → hold(58-结束)
   // 原卡节奏是 82→220f（≈4.6s）；本镜更长，按比例拉伸但保持「慢而稳」
@@ -75,7 +76,11 @@ export const PageSpotlight: React.FC<PageSpotlightProps> = ({
   );
 
   // 相机推进：全页 → 目标区域特写
-  const zoom = interpolate(frame, [PUSH_START, PUSH_END], [1.0, 1.55], {
+  // 推近幅度：1.55 → 1.28 → **1.08**。
+  // 改用全幅素材区（mediaZoneFull）后素材本身已占满内容区，再大幅推近只会把
+  // 素材上下裁掉（实测 1.28 时顶部标题被切）。1.08 保留轻微推近的生命感，
+  // 裁切量约 2.5%，素材内容完整可读。
+  const zoom = interpolate(frame, [PUSH_START, PUSH_END], [1.0, 1.08], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.33, 0, 0.15, 1),
@@ -94,23 +99,16 @@ export const PageSpotlight: React.FC<PageSpotlightProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // 按宽高双约束算确定尺寸。
-  // 竖屏用 0.70 × 0.32：整页截图是**宽幅**图（1280×544），按宽度撑满后高度
-  // 仍过大，会把镜头文案推进图片底部并叠上底部字幕带（实测返工两次）。
-  // 竖屏本来就该把它当"引证小图"处理，不是主视觉。
-  //
-  // Portrait: a landscape page screenshot must be treated as a small cited
-  // figure, not the hero — at full width it grows tall enough to collide with
-  // both the shot caption and the subtitle band.
+  // 素材适配进 mediaZoneFull —— 尺寸由区域驱动，不再写死 safeWidth/safeHeight 比例。
+  // 本镜无文案，素材用全幅素材区（横屏 1760 宽 vs 分栏 1020），因此明显更大。
+  // 宽幅整页截图在竖屏由区域宽度绑定，天然不会撑高去压字幕带。
+  // fill 经 `tune` 读 TUNING（竖屏 portraitMediaFill，**必须 ≤1**）。
+  const fill = tune(layout, "portraitMediaFill", "landscapeMediaFill");
   const { w: panelW, h: panelH } = fitSize(
     file,
-    layout.safeWidth * (portrait ? 0.7 : 0.96),
-    layout.safeHeight * (portrait ? 0.32 : 0.6),
+    layout.mediaZoneFull.w * fill,
+    layout.mediaZoneFull.h * fill,
   );
-  const captionIn = interpolate(frame, [LOCK_END, LOCK_END + 16], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
 
   return (
     <div
@@ -122,23 +120,28 @@ export const PageSpotlight: React.FC<PageSpotlightProps> = ({
         overflow: "hidden",
       }}
     >
-      {/* ── 页面在暗场里被聚光读出 ── */}
+      {/* ── 页面在暗场里被聚光读出 ──
+          分两层是必须的：**视窗层不加 transform**，只负责裁切；
+          缩放层在里面做推近。若把 scale 加在带 overflow:hidden 的同一个元素上，
+          CSS 会把裁切边界一起缩放，裁切就失效了（素材会溢出到画布外）。 */}
       <div
         style={{
           position: "absolute",
-          left: layout.safe.left,
-          width: layout.safeWidth,
-          top: layout.heroCenterY,
-          transform: `translateY(-50%) scale(${zoom})`,
+          left: layout.mediaZoneFull.x,
+          width: layout.mediaZoneFull.w,
+          top: layout.mediaZoneFull.y,
+          height: layout.mediaZoneFull.h,
+          overflow: "hidden",
           display: "flex",
           justifyContent: "center",
+          alignItems: "center",
           // 亮度随聚光锁定抬升；未锁定区域保持压暗，制造"光到即亮"
           filter: `brightness(${0.42 + lift * 0.46}) contrast(1.04)`,
-          transition: "none",
         }}
       >
         <div
           style={{
+            transform: `scale(${zoom})`,
             borderRadius: 14,
             overflow: "hidden",
             border: `1px solid ${theme.border}`,
@@ -173,48 +176,6 @@ export const PageSpotlight: React.FC<PageSpotlightProps> = ({
           background: `radial-gradient(circle ${poolRadius * 1.3}% at ${beamX * 100}% ${beamY * 100}%, ${theme.accent}22 0%, transparent 60%)`,
         }}
       />
-
-      {/* ── 主文案：紧贴图下方（不按画面比例绝对定位，避免与字幕带打架）── */}
-      {text ? (
-        <div
-          style={{
-            position: "absolute",
-            left: layout.safe.left,
-            width: layout.safeWidth,
-            top: layout.heroCenterY + panelH / 2 + (portrait ? 32 : 24),
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 12,
-            opacity: captionIn,
-            transform: `translateY(${(1 - captionIn) * 12}px)`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: portrait ? 40 : 38,
-              fontWeight: 600,
-              color: theme.text,
-              letterSpacing: "0.03em",
-              textAlign: "center",
-            }}
-          >
-            {text}
-          </div>
-          {source ? (
-            <div
-              style={{
-                fontSize: portrait ? 22 : 20,
-                color: theme.primary,
-                letterSpacing: "0.16em",
-                fontFamily: "monospace",
-              }}
-            >
-              {source}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 };

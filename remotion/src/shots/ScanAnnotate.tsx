@@ -19,13 +19,16 @@
  * 相对原卡的适配：原卡 bbox 是针对某个具体产品页面手调的像素值。
  * 本项目素材是学术图表，目标由 `targets` prop 传入**归一化坐标**，
  * 换图时只需改数据、不必改动画代码。
+ *
+ * 用户口径：本镜是「用素材图」的镜头，**渲染时不再输出任何镜头内文案**，
+ * 因此素材改用 `mediaZoneFull` 全幅素材区（图内的标注属于动效，保留）。
  */
 
 import React from "react";
 import { Easing, Img, interpolate, useCurrentFrame } from "remotion";
 import { FONT_FAMILY, ThemeTokens } from "../theme/theme";
 import { imageUrl } from '../theme/assetPath';
-import { Layout } from "../theme/layout";
+import { Layout, tune } from "../theme/layout";
 import { fitSize } from "../theme/assetDims";
 
 /** 一个标注目标 / One annotation target, in normalised image coordinates. */
@@ -43,6 +46,7 @@ export interface AnnoTarget {
 
 export interface ScanAnnotateProps {
   file: string;
+  // 用户口径：素材镜头不再输出文案 —— 字段保留以维持 Python 侧 spec 契约，渲染时忽略。
   text?: string;
   subtext?: string;
   targets: AnnoTarget[];
@@ -58,8 +62,6 @@ const SCAN_TRAVEL = SCAN_TO - SCAN_FROM;
 
 export const ScanAnnotate: React.FC<ScanAnnotateProps> = ({
   file,
-  text,
-  subtext,
   targets,
   theme,
   layout,
@@ -107,13 +109,13 @@ export const ScanAnnotate: React.FC<ScanAnnotateProps> = ({
   const statusColor = complete ? theme.primary : theme.textMuted;
 
   // 图按**宽高双约束**算出确定显示尺寸：容器与图严格同尺寸，
-  // 标注百分比才有意义；同时把文字与字幕带的位置预留出来（横屏曾整个溢出）。
-  const maxW = layout.safeWidth * 0.86;
-  const maxH = layout.safeHeight * (portrait ? 0.5 : 0.56);
-  const { w: panelW, h: panelH } = fitSize(file, maxW, maxH);
-
-  // 文字压在**图下方**（图已留出余量，不再需要绝对定位到画面比例位置）
-  const textTop = layout.heroCenterY + panelH / 2 + (portrait ? 34 : 26);
+  // 标注百分比才有意义。尺寸由 mediaZoneFull 驱动，不再写死 safeHeight 比例。
+  const fill = tune(layout, "portraitMediaFill", "landscapeMediaFill");
+  const { w: panelW, h: panelH } = fitSize(
+    file,
+    layout.mediaZoneFull.w * fill,
+    layout.mediaZoneFull.h * fill,
+  );
 
   return (
     <div
@@ -142,193 +144,164 @@ export const ScanAnnotate: React.FC<ScanAnnotateProps> = ({
       </div>
 
       {/* ── 图 + 扫描线 + 取景框，共用同一尺寸的定位容器 ──
-          **水平居中**（left 50% + translateX(-50%)）：早先只写了 translateY，
-          面板会贴左边安全框，与其它镜头不对齐。
+          外层由 layout.mediaZoneFull 定位并 flex 居中；内层与图**严格同尺寸**，
+          标注的百分比坐标才成立（早先靠 left 50% + translate 手算居中）。
           **不要 overflow:hidden** —— 标注按整图尺寸换算百分比，
           一旦容器裁剪，标注会被切掉（实测过）。圆角直接加在图上。 */}
       <div
         style={{
           position: "absolute",
-          left: "50%",
-          top: layout.heroCenterY,
-          transform: "translate(-50%, -50%)",
-          width: panelW,
-          height: panelH,
-          border: `1px solid ${theme.border}`,
-          borderRadius: 14,
-          boxShadow: `0 26px 80px rgba(0,0,0,0.65), 0 0 0 1px ${theme.primary}14 inset`,
+          left: layout.mediaZoneFull.x,
+          width: layout.mediaZoneFull.w,
+          top: layout.mediaZoneFull.y,
+          height: layout.mediaZoneFull.h,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
-        <Img
-          src={imageUrl(file)}
-          style={{
-            display: "block",
-            width: panelW,
-            height: panelH,
-            borderRadius: 13,
-            filter: "brightness(0.93) contrast(1.05)",
-          }}
-        />
-
-        {/* 扫描线：1px 亮线 + 上下渐隐拖尾，让它像"光"不像"横杠" */}
         <div
           style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: `${scanT * 100}%`,
-            height: 2,
-            opacity: scanOpacity,
-            background: `linear-gradient(90deg, transparent, ${theme.accent} 12%, #FFFFFF 50%, ${theme.accent} 88%, transparent)`,
-            boxShadow: `0 0 18px 4px ${theme.accent}55`,
+            position: "relative",
+            width: panelW,
+            height: panelH,
+            border: `1px solid ${theme.border}`,
+            borderRadius: 14,
+            boxShadow: `0 26px 80px rgba(0,0,0,0.65), 0 0 0 1px ${theme.primary}14 inset`,
           }}
-        />
+        >
+          <Img
+            src={imageUrl(file)}
+            style={{
+              display: "block",
+              width: panelW,
+              height: panelH,
+              borderRadius: 13,
+              filter: "brightness(0.93) contrast(1.05)",
+            }}
+          />
 
-        {/* 取景框：4 个 L 角，outBack 收拢 + 对焦闪 */}
-        {targets.map((t, i) => {
-          const ft = firedOf.get(t) ?? 1;
-          const fireFrame = ft * durationInFrames;
-          // 触发帧起 8f 内快速浮现（inputRange/outputRange 必须等长）
-          const a = interpolate(frame, [fireFrame, fireFrame + 8], [0, 1], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-          });
-          if (a <= 0) return null;
+          {/* 扫描线：1px 亮线 + 上下渐隐拖尾，让它像"光"不像"横杠" */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: `${scanT * 100}%`,
+              height: 2,
+              opacity: scanOpacity,
+              background: `linear-gradient(90deg, transparent, ${theme.accent} 12%, #FFFFFF 50%, ${theme.accent} 88%, transparent)`,
+              boxShadow: `0 0 18px 4px ${theme.accent}55`,
+            }}
+          />
 
-          const settle = interpolate(
-            frame,
-            [fireFrame, fireFrame + 0.13 * durationInFrames],
-            [1.75, 1],
-            {
+          {/* 取景框：4 个 L 角，outBack 收拢 + 对焦闪 */}
+          {targets.map((t, i) => {
+            const ft = firedOf.get(t) ?? 1;
+            const fireFrame = ft * durationInFrames;
+            // 触发帧起 8f 内快速浮现（inputRange/outputRange 必须等长）
+            const a = interpolate(frame, [fireFrame, fireFrame + 8], [0, 1], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
-              // outBack：过冲后回稳，读作"对准"
-              easing: Easing.out(Easing.back(1.6)),
-            },
-          );
-          const flash = interpolate(
-            frame,
-            [
-              (ft + 0.04) * durationInFrames,
-              (ft + 0.07) * durationInFrames,
-              (ft + 0.22) * durationInFrames,
-            ],
-            [0, 0.07, 0],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-          );
-          const labelIn = interpolate(
-            frame,
-            [(ft + 0.05) * durationInFrames, (ft + 0.16) * durationInFrames],
-            [0, 1],
-            {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-              easing: Easing.out(Easing.cubic),
-            },
-          );
+            });
+            if (a <= 0) return null;
 
-          const ARM = 9;
-          const box = {
-            left: `${t.x * 100}%`,
-            top: `${t.y * 100}%`,
-            width: `${t.w * 100}%`,
-            height: `${t.h * 100}%`,
-            position: "absolute" as const,
-            transform: `scale(${settle})`,
-            transformOrigin: "center center",
-          };
-          const armStyle: React.CSSProperties = {
-            position: "absolute",
-            width: ARM,
-            height: ARM,
-            borderColor: theme.accent,
-            borderStyle: "solid",
-            borderWidth: 0,
-          };
+            const settle = interpolate(
+              frame,
+              [fireFrame, fireFrame + 0.13 * durationInFrames],
+              [1.75, 1],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                // outBack：过冲后回稳，读作"对准"
+                easing: Easing.out(Easing.back(1.6)),
+              },
+            );
+            const flash = interpolate(
+              frame,
+              [
+                (ft + 0.04) * durationInFrames,
+                (ft + 0.07) * durationInFrames,
+                (ft + 0.22) * durationInFrames,
+              ],
+              [0, 0.07, 0],
+              { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+            );
+            const labelIn = interpolate(
+              frame,
+              [(ft + 0.05) * durationInFrames, (ft + 0.16) * durationInFrames],
+              [0, 1],
+              {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                easing: Easing.out(Easing.cubic),
+              },
+            );
 
-          return (
-            <React.Fragment key={i}>
-              <div style={{ ...box, opacity: a }}>
+            const ARM = 9;
+            const box = {
+              left: `${t.x * 100}%`,
+              top: `${t.y * 100}%`,
+              width: `${t.w * 100}%`,
+              height: `${t.h * 100}%`,
+              position: "absolute" as const,
+              transform: `scale(${settle})`,
+              transformOrigin: "center center",
+            };
+            const armStyle: React.CSSProperties = {
+              position: "absolute",
+              width: ARM,
+              height: ARM,
+              borderColor: theme.accent,
+              borderStyle: "solid",
+              borderWidth: 0,
+            };
+
+            return (
+              <React.Fragment key={i}>
+                <div style={{ ...box, opacity: a }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "#FFFFFF",
+                      opacity: flash,
+                    }}
+                  />
+                  <div style={{ ...armStyle, left: 0, top: 0, borderLeftWidth: 1.5, borderTopWidth: 1.5 }} />
+                  <div style={{ ...armStyle, right: 0, top: 0, borderRightWidth: 1.5, borderTopWidth: 1.5 }} />
+                  <div style={{ ...armStyle, left: 0, bottom: 0, borderLeftWidth: 1.5, borderBottomWidth: 1.5 }} />
+                  <div style={{ ...armStyle, right: 0, bottom: 0, borderRightWidth: 1.5, borderBottomWidth: 1.5 }} />
+                </div>
+
+                {/* 标注：等宽小字，滞后于取景框出现（"框稳了才命名"）。
+                    放在框的**正下方居中**而不是侧边 —— 竖屏安全框宽度有限，
+                    侧置标注必然溢出图外或被裁掉；下方居中在横竖屏都成立。 */}
                 <div
                   style={{
                     position: "absolute",
-                    inset: 0,
-                    background: "#FFFFFF",
-                    opacity: flash,
+                    left: `${(t.x + t.w / 2) * 100}%`,
+                    top: `${(t.y + t.h) * 100}%`,
+                    transform: `translateX(-50%) translateY(${4 + (1 - labelIn) * 4}px)`,
+                    opacity: labelIn,
+                    fontFamily: "monospace",
+                    fontSize: portrait ? 16 : 15,
+                    letterSpacing: "1.5px",
+                    color: theme.text,
+                    whiteSpace: "nowrap",
+                    textShadow: "0 2px 10px rgba(0,0,0,0.95)",
+                    background: "rgba(4,8,10,0.72)",
+                    padding: "3px 9px",
+                    borderRadius: 5,
                   }}
-                />
-                <div style={{ ...armStyle, left: 0, top: 0, borderLeftWidth: 1.5, borderTopWidth: 1.5 }} />
-                <div style={{ ...armStyle, right: 0, top: 0, borderRightWidth: 1.5, borderTopWidth: 1.5 }} />
-                <div style={{ ...armStyle, left: 0, bottom: 0, borderLeftWidth: 1.5, borderBottomWidth: 1.5 }} />
-                <div style={{ ...armStyle, right: 0, bottom: 0, borderRightWidth: 1.5, borderBottomWidth: 1.5 }} />
-              </div>
-
-              {/* 标注：等宽小字，滞后于取景框出现（"框稳了才命名"）。
-                  放在框的**正下方居中**而不是侧边 —— 竖屏安全框只有 840px 宽，
-                  侧置标注必然溢出图外或被裁掉；下方居中在横竖屏都成立。 */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: `${(t.x + t.w / 2) * 100}%`,
-                  top: `${(t.y + t.h) * 100}%`,
-                  transform: `translateX(-50%) translateY(${4 + (1 - labelIn) * 4}px)`,
-                  opacity: labelIn,
-                  fontFamily: "monospace",
-                  fontSize: portrait ? 16 : 15,
-                  letterSpacing: "1.5px",
-                  color: theme.text,
-                  whiteSpace: "nowrap",
-                  textShadow: "0 2px 10px rgba(0,0,0,0.95)",
-                  background: "rgba(4,8,10,0.72)",
-                  padding: "3px 9px",
-                  borderRadius: 5,
-                }}
-              >
-                {t.label}
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
-
-      {/* ── 主文案：紧贴图下方，不再按画面比例绝对定位 ── */}
-      {text ? (
-        <div
-          style={{
-            position: "absolute",
-            left: layout.safe.left,
-            width: layout.safeWidth,
-            top: textTop,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              fontSize: portrait ? 34 : 32,
-              fontWeight: 600,
-              color: theme.text,
-              letterSpacing: "0.02em",
-            }}
-          >
-            {text}
-          </div>
-          {subtext ? (
-            <div
-              style={{
-                marginTop: 10,
-                fontSize: portrait ? 24 : 22,
-                color: theme.primary,
-                letterSpacing: "0.04em",
-              }}
-            >
-              {subtext}
-            </div>
-          ) : null}
+                >
+                  {t.label}
+                </div>
+              </React.Fragment>
+            );
+          })}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 };

@@ -19,17 +19,21 @@
  * 我们只有一份素材图，因此 before = 该图的低对比灰蒙态（模拟未优化），
  * after = 该图的正常态。**这是有意的降级**，记录在
  * docs/design/02_storyboard.md；若后续拿到真实 before 截图，替换 `file` 即可。
+ *
+ * 用户口径：本镜是「用素材图」的镜头，**渲染时不再输出任何镜头内文案**，
+ * 因此素材改用 `mediaZoneFull` 全幅素材区（BEFORE/AFTER 角标属于动效，保留）。
  */
 
 import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, useCurrentFrame } from "remotion";
 import { FONT_FAMILY, ThemeTokens } from "../theme/theme";
 import { imageUrl } from '../theme/assetPath';
-import { Layout } from "../theme/layout";
+import { Layout, tune } from "../theme/layout";
 import { fitSize } from "../theme/assetDims";
 
 export interface BeforeAfterProps {
   file: string;
+  // 用户口径：素材镜头不再输出文案 —— 以下字段保留以维持 Python 侧 spec 契约，渲染时忽略。
   text?: string;
   subtext?: string;
   metrics?: Array<{ label: string; value: string }>;
@@ -40,9 +44,6 @@ export interface BeforeAfterProps {
 
 export const BeforeAfter: React.FC<BeforeAfterProps> = ({
   file,
-  text,
-  subtext,
-  metrics,
   theme,
   layout,
   durationInFrames,
@@ -125,13 +126,6 @@ export const BeforeAfter: React.FC<BeforeAfterProps> = ({
     extrapolateRight: "clamp",
   });
 
-  const textIn = interpolate(
-    frame,
-    [SCAN_END * durationInFrames, SCAN_END * durationInFrames + 16],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) },
-  );
-
   const exit = interpolate(
     frame,
     [durationInFrames - 10, durationInFrames],
@@ -139,191 +133,161 @@ export const BeforeAfter: React.FC<BeforeAfterProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // 宽高双约束算确定尺寸（避免宽度撑高把文案挤出画面）
+  // 素材适配进 mediaZoneFull —— 尺寸由区域驱动，不再写死 safeHeight/safeWidth 比例。
+  // 本镜无文案，素材占满整个内容区，因此比左栏素材显著更大。
+  // fill 经 `tune` 读 TUNING（竖屏 portraitMediaFill = 1.05），不内联 portrait ? a : b。
+  const fill = tune(layout, "portraitMediaFill", "landscapeMediaFill");
   const { w: panelW, h: panelH } = fitSize(
     file,
-    layout.safeWidth * 0.92,
-    layout.safeHeight * (portrait ? 0.5 : 0.58),
+    layout.mediaZoneFull.w * fill,
+    layout.mediaZoneFull.h * fill,
   );
 
-  const metric = metrics?.[0];
   const badgeFont = portrait ? 20 : 18;
 
   return (
     <AbsoluteFill style={{ opacity: exit, fontFamily: FONT_FAMILY }}>
+      {/* 素材区容器 = mediaZoneFull，flex 居中；不再用 translate(-50%,-50%) 手算居中 */}
       <div
         style={{
           position: "absolute",
-          left: "50%",
-          top: layout.heroCenterY,
-          transform: "translate(-50%, -50%)",
-          width: panelW,
-          height: panelH,
-          borderRadius: 14,
-          border: `1px solid ${theme.border}`,
-          boxShadow: "0 26px 80px rgba(0,0,0,0.66)",
-          // 两层叠放在同一容器里，靠 clip-path 分割
-          overflow: "hidden",
+          left: layout.mediaZoneFull.x,
+          width: layout.mediaZoneFull.w,
+          top: layout.mediaZoneFull.y,
+          height: layout.mediaZoneFull.h,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
-        {/* ── before 层（底）：可信的低对比灰蒙 ── */}
-        <Img
-          src={imageUrl(file)}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: panelW,
-            height: panelH,
-            filter: "grayscale(0.72) contrast(0.72) brightness(0.86)",
-          }}
-        />
-
-        {/* ── after 层（上）：右边界跟随杆 x 显影 ── */}
         <div
           style={{
-            position: "absolute",
-            inset: 0,
-            // 杆左侧是 after，右侧被裁掉露出底下的 before
-            clipPath: `inset(0 ${(1 - x) * 100}% 0 0)`,
+            position: "relative",
+            width: panelW,
+            height: panelH,
+            borderRadius: 14,
+            border: `1px solid ${theme.border}`,
+            boxShadow: "0 26px 80px rgba(0,0,0,0.66)",
+            // 两层叠放在同一容器里，靠 clip-path 分割
+            overflow: "hidden",
           }}
         >
+          {/* ── before 层（底）：可信的低对比灰蒙 ── */}
           <Img
             src={imageUrl(file)}
             style={{
+              position: "absolute",
+              inset: 0,
               width: panelW,
               height: panelH,
-              filter: "brightness(0.96) contrast(1.1) saturate(1.12)",
+              filter: "grayscale(0.72) contrast(0.72) brightness(0.86)",
             }}
           />
-        </div>
 
-        {/* ── 分割杆 + 圆形手柄 ── */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: `${x * 100}%`,
-            width: 2,
-            marginLeft: -1,
-            background: `linear-gradient(180deg, ${theme.accent}, ${theme.primary})`,
-            boxShadow: `0 0 16px 3px ${theme.accent}66`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: `${x * 100}%`,
-            width: 46,
-            height: 46,
-            marginLeft: -23,
-            marginTop: -23,
-            borderRadius: "50%",
-            background: theme.surface,
-            border: `2px solid ${theme.accent}`,
-            boxShadow: `0 6px 24px rgba(0,0,0,0.6), 0 0 22px ${theme.accent}55`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 5,
-            // 速度差分驱动的微拉伸
-            transform: `scaleX(${gripStretch})`,
-          }}
-        >
-          {[-1, 1].map((d) => (
-            <div
-              key={d}
+          {/* ── after 层（上）：右边界跟随杆 x 显影 ── */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              // 杆左侧是 after，右侧被裁掉露出底下的 before
+              clipPath: `inset(0 ${(1 - x) * 100}% 0 0)`,
+            }}
+          >
+            <Img
+              src={imageUrl(file)}
               style={{
-                width: 0,
-                height: 0,
-                borderTop: "5px solid transparent",
-                borderBottom: "5px solid transparent",
-                [d < 0 ? "borderRight" : "borderLeft"]: `7px solid ${theme.accent}`,
+                width: panelW,
+                height: panelH,
+                filter: "brightness(0.96) contrast(1.1) saturate(1.12)",
               }}
             />
-          ))}
-        </div>
+          </div>
 
-        {/* ── 角标：放在内容区，不压主体 ── */}
-        <div
-          style={{
-            position: "absolute",
-            left: 12,
-            bottom: 12,
-            opacity: badgeIn,
-            fontFamily: "monospace",
-            fontSize: badgeFont,
-            letterSpacing: "2px",
-            color: theme.textMuted,
-            background: "rgba(4,8,10,0.72)",
-            padding: "3px 9px",
-            borderRadius: 5,
-          }}
-        >
-          BEFORE
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            right: 12,
-            bottom: 12,
-            opacity: badgeIn,
-            fontFamily: "monospace",
-            fontSize: badgeFont,
-            letterSpacing: "2px",
-            color: theme.accent,
-            background: "rgba(4,8,10,0.72)",
-            padding: "3px 9px",
-            borderRadius: 5,
-          }}
-        >
-          AFTER
+          {/* ── 分割杆 + 圆形手柄 ── */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: `${x * 100}%`,
+              width: 2,
+              marginLeft: -1,
+              background: `linear-gradient(180deg, ${theme.accent}, ${theme.primary})`,
+              boxShadow: `0 0 16px 3px ${theme.accent}66`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: `${x * 100}%`,
+              width: 46,
+              height: 46,
+              marginLeft: -23,
+              marginTop: -23,
+              borderRadius: "50%",
+              background: theme.surface,
+              border: `2px solid ${theme.accent}`,
+              boxShadow: `0 6px 24px rgba(0,0,0,0.6), 0 0 22px ${theme.accent}55`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 5,
+              // 速度差分驱动的微拉伸
+              transform: `scaleX(${gripStretch})`,
+            }}
+          >
+            {[-1, 1].map((d) => (
+              <div
+                key={d}
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderTop: "5px solid transparent",
+                  borderBottom: "5px solid transparent",
+                  [d < 0 ? "borderRight" : "borderLeft"]: `7px solid ${theme.accent}`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* ── 角标：放在内容区，不压主体 ── */}
+          <div
+            style={{
+              position: "absolute",
+              left: 12,
+              bottom: 12,
+              opacity: badgeIn,
+              fontFamily: "monospace",
+              fontSize: badgeFont,
+              letterSpacing: "2px",
+              color: theme.textMuted,
+              background: "rgba(4,8,10,0.72)",
+              padding: "3px 9px",
+              borderRadius: 5,
+            }}
+          >
+            BEFORE
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              right: 12,
+              bottom: 12,
+              opacity: badgeIn,
+              fontFamily: "monospace",
+              fontSize: badgeFont,
+              letterSpacing: "2px",
+              color: theme.accent,
+              background: "rgba(4,8,10,0.72)",
+              padding: "3px 9px",
+              borderRadius: 5,
+            }}
+          >
+            AFTER
+          </div>
         </div>
       </div>
-
-      {/* ── 主文案在图下方 ── */}
-      {text ? (
-        <div
-          style={{
-            position: "absolute",
-            left: layout.safe.left,
-            width: layout.safeWidth,
-            top: layout.heroCenterY + panelH / 2 + (portrait ? 32 : 24),
-            textAlign: "center",
-            opacity: textIn,
-          }}
-        >
-          <div style={{ fontSize: portrait ? 36 : 34, fontWeight: 600, color: theme.text }}>
-            {text}
-          </div>
-          {subtext ? (
-            <div
-              style={{
-                marginTop: 10,
-                fontSize: portrait ? 26 : 24,
-                color: theme.primary,
-                letterSpacing: "0.04em",
-              }}
-            >
-              {subtext}
-            </div>
-          ) : null}
-          {metric ? (
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: portrait ? 30 : 28,
-                fontWeight: 800,
-                color: theme.accent,
-                letterSpacing: "0.02em",
-              }}
-            >
-              {metric.label} {metric.value}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </AbsoluteFill>
   );
 };

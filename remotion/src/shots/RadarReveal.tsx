@@ -14,17 +14,21 @@
  *   - 显影罩 feather ~15%：边太硬像圆形遮罩，太糊没有"照到/照不到"的界线
  *
  * 本项目用作**短视频的高潮镜头**（`07` 雷达图），对应分镜 5 号位。
+ *
+ * 用户口径：本镜是「用素材图」的镜头，**渲染时不再输出任何镜头内文案**，
+ * 因此素材改用 `mediaZoneFull` 全幅素材区。
  */
 
 import React from "react";
 import { Easing, Img, interpolate, useCurrentFrame } from "remotion";
 import { FONT_FAMILY, ThemeTokens } from "../theme/theme";
 import { imageUrl } from '../theme/assetPath';
-import { Layout } from "../theme/layout";
+import { Layout, tune } from "../theme/layout";
 import { fitSize } from "../theme/assetDims";
 
 export interface RadarRevealProps {
   file: string;
+  // 用户口径：素材镜头不再输出文案 —— 字段保留以维持 Python 侧 spec 契约，渲染时忽略。
   text?: string;
   subtext?: string;
   theme: ThemeTokens;
@@ -34,14 +38,11 @@ export interface RadarRevealProps {
 
 export const RadarReveal: React.FC<RadarRevealProps> = ({
   file,
-  text,
-  subtext,
   theme,
   layout,
   durationInFrames,
 }) => {
   const frame = useCurrentFrame();
-  const portrait = layout.orientation === "portrait";
 
   // ── 半径终值：必须恰好覆盖画面（取对角线，且不被 aspect 压扁）──
   // 用 vmax 单位让它与横竖屏无关；135% vmax 覆盖任何角到对角的距离。
@@ -63,12 +64,6 @@ export const RadarReveal: React.FC<RadarRevealProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  const textIn = interpolate(frame, [durationInFrames * 0.52, durationInFrames * 0.66], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  });
-
   const exit = interpolate(
     frame,
     [durationInFrames - 10, durationInFrames],
@@ -76,10 +71,15 @@ export const RadarReveal: React.FC<RadarRevealProps> = ({
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
-  // 同上：按宽高双约束算确定尺寸，保证文字能落在图下方且不与字幕带冲突
-  const maxW = layout.safeWidth * (portrait ? 1.0 : 0.92);
-  const maxH = layout.safeHeight * (portrait ? 0.46 : 0.5);
-  const { w: panelW, h: panelH } = fitSize(file, maxW, maxH);
+  // 素材适配进 mediaZoneFull —— 尺寸由区域驱动，不再写死 safeWidth/safeHeight 比例。
+  // 本镜无文案，素材占满整个内容区，因此比左栏素材显著更大。
+  // fill 经 `tune` 读 TUNING（竖屏 portraitMediaFill = 1.05），不内联 portrait ? a : b。
+  const fill = tune(layout, "portraitMediaFill", "landscapeMediaFill");
+  const { w: panelW, h: panelH } = fitSize(
+    file,
+    layout.mediaZoneFull.w * fill,
+    layout.mediaZoneFull.h * fill,
+  );
 
   return (
     <div
@@ -90,16 +90,16 @@ export const RadarReveal: React.FC<RadarRevealProps> = ({
         opacity: exit,
       }}
     >
-      {/* 绝对定位而非 flex 居中：文字要贴在**图下方**，flex 居中会把两者叠在一起 */}
+      {/* 素材区容器 = mediaZoneFull，flex 居中；不再用 translateY(-50%) 手算居中 */}
       <div
         style={{
           position: "absolute",
-          left: layout.safe.left,
-          width: layout.safeWidth,
-          top: layout.heroCenterY,
-          transform: "translateY(-50%)",
+          left: layout.mediaZoneFull.x,
+          width: layout.mediaZoneFull.w,
+          top: layout.mediaZoneFull.y,
+          height: layout.mediaZoneFull.h,
           display: "flex",
-          flexDirection: "column",
+          justifyContent: "center",
           alignItems: "center",
         }}
       >
@@ -122,42 +122,6 @@ export const RadarReveal: React.FC<RadarRevealProps> = ({
               filter: "brightness(0.93) contrast(1.06)",
             }}
           />
-        </div>
-
-        <div
-          style={{
-            marginTop: portrait ? 34 : 28,
-            opacity: textIn,
-            transform: `translateY(${(1 - textIn) * 14}px)`,
-            textAlign: "center",
-            maxWidth: layout.contentWidth * 0.9,
-          }}
-        >
-          {text ? (
-            <div
-              style={{
-                fontSize: portrait ? 44 : 42,
-                fontWeight: 700,
-                color: theme.text,
-                letterSpacing: "0.02em",
-              }}
-            >
-              {text}
-            </div>
-          ) : null}
-          {subtext ? (
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: portrait ? 34 : 30,
-                fontWeight: 700,
-                color: theme.primary,
-                letterSpacing: "0.04em",
-              }}
-            >
-              {subtext}
-            </div>
-          ) : null}
         </div>
       </div>
 

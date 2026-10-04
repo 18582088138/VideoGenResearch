@@ -17,7 +17,7 @@ import React from "react";
 import { Easing, Img, interpolate, useCurrentFrame } from "remotion";
 import { ThemeTokens } from "../theme/theme";
 import { imageUrl } from '../theme/assetPath';
-import { Layout } from "../theme/layout";
+import { Layout, tune } from "../theme/layout";
 import { fitSize } from "../theme/assetDims";
 
 export interface ImagePanelProps {
@@ -32,7 +32,7 @@ export interface ImagePanelProps {
   /** 起止帧（本镜内）/ Frame window within this shot. */
   inFrames?: number;
   outFrames?: number;
-  /** 面板在安全框内的占比 / Panel size as a fraction of the safe area. */
+  /** 额外缩放系数（乘在 TUNING 的 mediaFill 上）/ Extra scale on top of mediaFill. */
   fit?: number;
   /** 额外样式（如位移）/ Extra style. */
   style?: React.CSSProperties;
@@ -47,7 +47,7 @@ export const ImagePanel: React.FC<ImagePanelProps> = ({
   zoomTo = 1.06,
   inFrames = 12,
   outFrames = 10,
-  fit = 0.94,
+  fit = 1,
   style,
 }) => {
   const frame = useCurrentFrame();
@@ -70,19 +70,32 @@ export const ImagePanel: React.FC<ImagePanelProps> = ({
     extrapolateRight: "clamp",
   });
 
-  // 按宽高双约束算确定显示尺寸（避免宽度撑高把版面挤出画面）
-  const maxW = layout.safeWidth * fit;
-  const maxH = layout.safeHeight * 0.62;
-  const { w: panelW, h: panelH } = fitSize(file, maxW, maxH);
+  // 素材适配进 mediaZone —— 素材是**视觉主体**，不再受 safeHeight 硬编码限制。
+  // 旧实现写死 `maxH = safeHeight * 0.62`，导致同一张 16:9 图在竖屏被缩到
+  // 790×444（占画布 16.9%），是竖屏观感差的直接原因。
+  //
+  // **必须除以最大缩放倍数**：Ken-Burns 会一直放大到 `zoomTo`，
+  // 若不预留这段空间，素材在推近过程中会溢出 mediaZone、压住文案区
+  // （实测：1.05 的溢出量 × 组件内 zoom 叠加后，素材宽度达到画布的 148%）。
+  //
+  // Divide by the maximum zoom: Ken-Burns grows the asset to `zoomTo`, so the
+  // space must be reserved up front or the asset escapes its zone mid-shot.
+  const fill = tune(layout, "portraitMediaFill", "landscapeMediaFill") * fit;
+  const zoomMax = Math.max(zoomFrom, zoomTo, 1);
+  const { w: panelW, h: panelH } = fitSize(
+    file,
+    (layout.mediaZone.w * fill) / zoomMax,
+    (layout.mediaZone.h * fill) / zoomMax,
+  );
 
   return (
     <div
       style={{
         position: "absolute",
-        left: layout.safe.left,
-        width: layout.safeWidth,
-        top: layout.heroCenterY,
-        transform: "translateY(-50%)",
+        left: layout.mediaZone.x,
+        width: layout.mediaZone.w,
+        top: layout.mediaZone.y,
+        height: layout.mediaZone.h,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
