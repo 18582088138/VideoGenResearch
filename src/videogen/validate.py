@@ -17,6 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from videogen.models import ImageAsset, Timeline
+from videogen.numbers import normalize as normalize_numbers
 from videogen.spec import (
     REQUIRED_FIELDS,
     SHOT_TYPES,
@@ -96,6 +97,7 @@ def validate_and_repair(
         _repair_metrics(shot, idx, log)
         _repair_stops(shot, idx, log)
         _repair_text(shot, idx, log)
+        _repair_numerals(shot, idx, log)
         _repair_caption_segments(shot, idx, log, cue_count)
         _repair_duration(shot, idx, log)
 
@@ -104,6 +106,9 @@ def validate_and_repair(
     # 两者互相影响，需要迭代。上限 8 轮，正常输入 2 轮内收敛。
     for _ in range(8):
         _relayout(spec, timeline, log)
+        # 先试着与邻居借帧解决轻微超限，借不到才切分 ——
+        # 切分的代价是复制内容（同一画面播两遍），为几帧付这个代价不值。
+        _rebalance_ceiling(spec, log)
         if all(s.duration_in_frames <= MAX_SHOT_FRAMES for s in spec.shots):
             break
         _split_long_shots(spec, log)
@@ -113,6 +118,11 @@ def validate_and_repair(
     # The 5-second ceiling outranks the shot-count cap: more shots beat one long one.
     _split_long_shots(spec, log)
     _relayout(spec, timeline, log)
+
+    # 打散雷同的镜头类型。放在**所有时长约束之后**：类型替换不改变时长，
+    # 但改类型可能影响必需字段，必须在结构稳定后再动。
+    # Break up repetitive types once the timeline is settled.
+    _enforce_variety(spec, log)
 
     # 最后收敛卡数：切分会把镜数顶出上限，这一步把它拉回区间。
     # 注意它只能在**所有时长约束都满足之后**执行，否则会与切分互相打架。
@@ -270,6 +280,69 @@ def _repair_text(shot: ShotSpec, idx: int, log: list[RepairEntry]) -> None:
         shot.text = shot.text[:MAX_TEXT]
 
 
+def _repair_numerals(shot: ShotSpec, idx: int, log: list[RepairEntry]) -> None:
+    """把文案里的中文数字改成阿拉伯数字 / Chinese numerals → digits.
+
+    用户口径：「视频文案以及视频分镜中，数字就不要改成文字了，直接用数字就行了，
+    使用文字很奇怪」。
+
+    为什么会出现中文数字：旁白由 TTS 合成（音频读的是「百分之四十六」），
+    模型在写文案时会**跟着旁白的读法**写。所以这一步在服务端统一收敛，
+    而不是只靠 prompt 要求。
+
+    它改的是**展示文本**，所以留痕（便于追溯这句话原本长什么样）。
+    """
+    changed: list[str] = []
+
+    for field in ("text", "subtext", "tagline", "footer", "metric", "eyebrow"):
+        value = getattr(shot, field, "")
+        if value:
+            fixed = normalize_numbers(value)
+            if fixed != value:
+                setattr(shot, field, fixed)
+                changed.append(field)
+
+    if shot.bullets:
+        fixed_bullets = [normalize_numbers(b) for b in shot.bullets]
+        if fixed_bullets != shot.bullets:
+            shot.bullets = fixed_bullets
+            changed.append("bullets")
+
+    for metric in shot.metrics:
+        fixed = normalize_numbers(metric.value)
+        if fixed != metric.value:
+            metric.value = fixed
+            changed.append(f"metrics[{metric.label}]")
+
+    for node in shot.nodes:
+        label, sub = normalize_numbers(node.label), normalize_numbers(node.sub)
+        if (label, sub) != (node.label, node.sub):
+            node.label, node.sub = label, sub
+            changed.append("nodes")
+
+    for stop in shot.stops:
+        note = normalize_numbers(stop.note)
+        if note != stop.note:
+            stop.note = note
+            changed.append("stops")
+
+    for side in shot.sides:
+        display = normalize_numbers(side.display)
+        if display != side.display:
+            side.display = display
+            changed.append("sides")
+
+    if changed:
+        log.append(
+            RepairEntry(
+                idx,
+                "numerals",
+                f"中文数字 / Chinese numerals: {', '.join(sorted(set(changed)))}",
+                "改为阿拉伯数字（用户口径：数字直接用数字）",
+            )
+        )
+
+
 def _repair_caption_segments(
     shot: ShotSpec, idx: int, log: list[RepairEntry], cue_count: int
 ) -> None:
@@ -316,6 +389,250 @@ def _repair_duration(shot: ShotSpec, idx: int, log: list[RepairEntry]) -> None:
             )
         )
         shot.duration_in_frames = ABSOLUTE_MAX_SHOT_FRAMES
+
+
+# 同形态的替代动效 / Same-shape alternatives.
+#
+# 用途：当相邻两镜撞了同一个 type、或某个 type 用超次数时，
+# 换成**表达同一种内容形态**的另一个动效 —— 画面观感变了、但讲的事没变。
+#
+# 为什么能这样换：这些 type 是按「内容形态」设计的（见 prompts/system.md 的
+# 形态库），同组内承载的形态相同，所以替换不会改变语义。
+# 例如「一组并列概念」用 figure-panel 还是 icon-grid 都成立。
+_SHAPE_SIBLINGS: dict[str, tuple[str, ...]] = {
+    # 枚举类 / enumeration
+    #
+    # ⚠️ 候选要**给足**：只给 1-2 个时，连续同型的镜头会把候选也占满，
+    # 于是后面的换不动、只能原样保留（实测：7 个连续 figure-panel，
+    # 只换掉 2 个）。候选池够大，兜底才真的能把类型打散。
+    "figure-panel": ("icon-grid", "steps-list", "quote-card", "comparison-table"),
+    "icon-grid": ("figure-panel", "keyword-highlight", "comparison-table"),
+    # 步骤 / 层次类 / sequence and hierarchy
+    "flow-diagram": ("steps-list", "layer-stack", "figure-panel"),
+    "steps-list": ("flow-diagram", "layer-stack", "figure-panel"),
+    "layer-stack": ("flow-diagram", "steps-list", "comparison-table"),
+    # 对比类 / comparison
+    "stat-compare": ("comparison-table", "progress-meter", "figure-panel"),
+    "comparison-table": ("stat-compare", "progress-meter", "layer-stack"),
+    "progress-meter": ("stat-compare", "number-roll", "counter-burst"),
+    # 数值类 / numeric
+    "number-roll": ("progress-meter", "counter-burst", "stat-compare"),
+    "counter-burst": ("number-roll", "progress-meter"),
+    # 论断类 / statement
+    "quote-card": ("keyword-highlight", "figure-panel", "steps-list"),
+    "keyword-highlight": ("quote-card", "icon-grid", "figure-panel"),
+    # 素材类 / asset-based
+    "scan-annotate": ("page-spotlight", "slow-push", "image-pair"),
+    "page-spotlight": ("scan-annotate", "slow-push", "image-pair"),
+    "slow-push": ("scan-annotate", "page-spotlight", "image-pair"),
+    "image-pair": ("scan-annotate", "page-spotlight", "before-after"),
+    "before-after": ("image-pair", "stat-compare", "scan-annotate"),
+    "timeline-travel": ("steps-list", "layer-stack", "progress-meter"),
+}
+
+# 只用一次的类型 / Types allowed at most once.
+_ONE_SHOT_TYPES = frozenset({"title-reveal", "outro-lockup", "radar-reveal"})
+
+# 同一 type 全片最多出现的次数 / Max occurrences per type.
+_MAX_TYPE_REPEAT = 2
+
+
+def _required_ok(shot: ShotSpec, field_name: str) -> bool:
+    """替代动效是否满足它自己的必需字段 / Whether a sibling can carry this shot.
+
+    只有**不需要新增字段**的替代才可用 —— 否则替换后会缺必需字段，
+    校验器又得降级，反而更糟。
+    """
+    from videogen.spec import REQUIRED_FIELDS
+
+    needed = REQUIRED_FIELDS.get(shot.type, ())
+    return all(_field_present(shot, f) for f in needed)
+
+
+def _field_present(shot: ShotSpec, name: str) -> bool:
+    value = getattr(shot, name, None)
+    if isinstance(value, (list, tuple)):
+        return len(value) > 0
+    return bool(value)
+
+
+def _enforce_variety(spec: VideoSpec, log: list[RepairEntry]) -> None:
+    """打散雷同的镜头类型 / Break up repetitive shot types.
+
+    **为什么要在服务端强制**：实测发现不同文章的图文镜头高度雷同 ——
+    模型总在 `figure-panel` / `flow-diagram` / `stat-compare` 这三个里打转。
+    prompt 里写了多样性规则，但光靠 prompt 约束不住（同类问题反复出现过），
+    所以这里做一道机械兜底：
+
+    1. **相邻撞型**：换成同形态的另一个动效（且新动效的必需字段要满足）；
+    2. **超次数**：同一 type 全片超过 `_MAX_TYPE_REPEAT` 次时，把**靠后的**那些
+       换成同形态替代；
+    3. 换不动就记一条日志，让人看见而不是静默放过。
+
+    `title-reveal` / `outro-lockup` / `radar-reveal` 是**位置语义**类型
+    （片头/片尾/高潮），不参与替换。
+    """
+    used: dict[str, int] = {}
+    changes = 0
+
+    for i, shot in enumerate(spec.shots):
+        if shot.type in _ONE_SHOT_TYPES:
+            used[shot.type] = used.get(shot.type, 0) + 1
+            continue
+
+        prev_type = spec.shots[i - 1].type if i > 0 else ""
+        count = used.get(shot.type, 0)
+        collides = shot.type == prev_type or count >= _MAX_TYPE_REPEAT
+
+        if collides:
+            for sibling in _SHAPE_SIBLINGS.get(shot.type, ()):
+                # 换成的那个也不能撞前一个、不能超次数
+                if sibling == prev_type:
+                    continue
+                if used.get(sibling, 0) >= _MAX_TYPE_REPEAT:
+                    continue
+                original = shot.type
+                shot.type = sibling
+                if not _required_ok(shot, sibling):
+                    shot.type = original  # 换过去缺字段，撤回
+                    continue
+                changes += 1
+                log.append(
+                    RepairEntry(
+                        i,
+                        "type",
+                        f"镜头类型雷同 / repetitive type: {original}"
+                        f"（前一镜或已达 {_MAX_TYPE_REPEAT} 次）",
+                        f"换成同形态的 {sibling}（内容形态不变）",
+                    )
+                )
+                break
+
+        used[shot.type] = used.get(shot.type, 0) + 1
+
+    distinct = len({s.type for s in spec.shots})
+    if changes:
+        log.append(
+            RepairEntry(
+                None,
+                "type",
+                f"多样性兜底 / variety enforced: 替换 {changes} 个镜头",
+                f"全片现有 {distinct} 种不同动效",
+            )
+        )
+    elif distinct < 5 and len(spec.shots) >= 6:
+        log.append(
+            RepairEntry(
+                None,
+                "type",
+                f"多样性不足 / low variety: 只用了 {distinct} 种动效",
+                "建议少于 5 种时重跑规划（prompt 的 4.3 已要求 ≥5 种）",
+            )
+        )
+
+
+def _rebalance_ceiling(spec: VideoSpec, log: list[RepairEntry]) -> None:
+    """把超限的帧**全局**匀给有余量的镜头，尽量避免切分。
+
+    Why this exists: ``_split_long_shots`` 的代价是**复制内容** ——
+    同一画面播两遍。实测出现过一支 15 镜的视频里 **11 镜是重复内容**
+    （模型给了 5 个 165 帧的镜头，每个被切成 83+82），观感很差。
+
+    **为什么是全局而不是只借邻居**：早先的实现只向左右相邻镜头借帧，
+    但模型常常**连续给好几个超限镜头** —— 邻居同样超限、没有余量，
+    于是一个都借不到。实测就是这样：``[2][3]`` 都是 165 帧，
+    ``_rebalance`` 直接放弃，最后全部被切分。
+
+    算法（水位填充）：
+    1. 所有超限镜头**削到上限**，把削下来的帧收成一个池子；
+    2. 池子分给任何还有余量的镜头（不限于邻居）;
+    3. 池子分不完 → 说明**总容量确实不够**（``总帧 > 镜数 × 上限``），
+       这时才交给切分 —— 而且此时切分是不可避免的，不是浪费。
+
+    这不会改变总时长，只重新分配各镜的长度。
+
+    Squeeze every over-ceiling shot down to the ceiling, pool the surplus, and
+    hand it to whichever shots still have room. Only when the pool cannot be
+    emptied is the total genuinely too large for the shot count.
+    """
+    # ⚠️ **容量不足时什么都不做**，交给 _split_long_shots。
+    #
+    # 再平衡的前提是「这些帧能从超限镜头搬到有余量的镜头」。若
+    # ``总帧 > 镜数 × 上限``，池子必然分不完 —— 那时丢掉剩下的帧会让
+    # 总时长对不上音频，硬塞回去又必然超限。所以这种场景直接放手，
+    # 交给切分（此时切分是**必然**的，不是浪费）。
+    #
+    # 实测：2 镜共 700 帧，容量只有 2×150=300 —— 再平衡毫无意义。
+    #
+    # 注意这个检查必须在**削减之前**：先削再查会把帧削没了。
+    total = sum(s.duration_in_frames for s in spec.shots)
+    capacity = len(spec.shots) * MAX_SHOT_FRAMES
+    over_total = sum(
+        max(0, s.duration_in_frames - MAX_SHOT_FRAMES) for s in spec.shots
+    )
+    if over_total == 0:
+        return
+    if total > capacity:
+        log.append(
+            RepairEntry(
+                None,
+                "durationInFrames",
+                f"容量不足 / capacity {capacity} < 总帧 {total}"
+                f"（{len(spec.shots)} 镜 × {MAX_SHOT_FRAMES} 帧上限）",
+                "只能切分（会增加镜数，代价是内容重复）",
+            )
+        )
+        return
+
+    # ── 容量足够：削峰填谷 ────────────────────────────────────────────────
+    surplus = 0
+    over_indices: list[int] = []
+    for i, shot in enumerate(spec.shots):
+        over = shot.duration_in_frames - MAX_SHOT_FRAMES
+        if over > 0:
+            shot.duration_in_frames = MAX_SHOT_FRAMES
+            surplus += over
+            over_indices.append(i)
+
+    # 把池子分给有余量的镜头。顺序无关紧要（后面会重排 from），
+    # 但为了观感均匀，按「当前最短优先」填，避免所有时长都堆到前几镜。
+    for shot in sorted(spec.shots, key=lambda s: s.duration_in_frames):
+        if surplus <= 0:
+            break
+        room = MAX_SHOT_FRAMES - shot.duration_in_frames
+        if room <= 0:
+            continue
+        take = min(room, surplus)
+        shot.duration_in_frames += take
+        surplus -= take
+
+    # 时长变了，from 要顺序重排，否则后续 _split_long_shots / 渲染都会错位
+    cursor = 0
+    for s in spec.shots:
+        s.from_frame = cursor
+        cursor += s.duration_in_frames
+
+    if surplus > 0:
+        # 总容量不够（总帧 > 镜数 × 上限）—— 只能切分。这不是浪费，是必然。
+        log.append(
+            RepairEntry(
+                None,
+                "durationInFrames",
+                f"容量不足 / capacity short by {surplus} 帧"
+                f"（{len(spec.shots)} 镜 × {MAX_SHOT_FRAMES} 帧上限 < 总帧）",
+                "只能切分（会增加镜数，但会重复内容）",
+            )
+        )
+    elif over_indices:
+        log.append(
+            RepairEntry(
+                None,
+                "durationInFrames",
+                f"全局再平衡 / rebalanced {len(over_indices)} 个超限镜头"
+                f"（削到 {MAX_SHOT_FRAMES} 帧，盈余分给有余量的镜头）",
+                "避免切分导致同一画面播两遍",
+            )
+        )
 
 
 def _split_long_shots(spec: VideoSpec, log: list[RepairEntry]) -> None:
@@ -552,6 +869,11 @@ def _relayout(spec: VideoSpec, timeline: Timeline, log: list[RepairEntry]) -> No
 
     n = len(spec.shots)
     # 均匀分配；用最大余额法保证总和精确
+    #
+    # ⚠️ 这里的钳制上限用 ABSOLUTE_MAX_SHOT_FRAMES（硬上限），**不要**改成
+    # MAX_SHOT_FRAMES（5 秒）。试过，会把均摊砍出 drift，而 drift 的补偿逻辑
+    # 会把差额全堆到末镜 —— 实测末镜直接变成 550 帧。
+    # 「削到 5 秒上限」是 _rebalance_ceiling 的职责（它同时保证总时长守恒）。
     base = delta // n
     rem = delta - base * n
     for i, shot in enumerate(spec.shots):

@@ -39,9 +39,10 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from videogen.asr import ASRResult, ASRUnit, transcribe  # noqa: E402
+from videogen.numbers import normalize  # noqa: E402
 from videogen.paths import assets_dir  # noqa: E402
 from videogen.sources import load_set  # noqa: E402
-from videogen.subtitle import SubtitleParams, segment, to_srt, weight  # noqa: E402
+from videogen.subtitle import Cue, SubtitleParams, segment, to_srt, weight  # noqa: E402
 
 # 本项目最早两套素材（尚未纳入素材集体系）的名字
 LEGACY_AUDIO = {
@@ -142,6 +143,10 @@ def main() -> int:
         max_seconds=args.max_seconds,
     )
     cues = segment(result.units, params)
+    # 中文数字 → 阿拉伯数字。旁白是 TTS 合成的，音频里读的是「零点三四四米」，
+    # ASR 回来自然也是中文数字；但屏幕上「0.344米」更短更易扫读
+    # （用户口径：数字直接用数字，用文字很奇怪）。
+    cues = [Cue(start=c.start, end=c.end, text=normalize(c.text)) for c in cues]
     srt_path.write_text(to_srt(cues), encoding="utf-8")
 
     # ── 报告 ───────────────────────────────────────────────────────────────
