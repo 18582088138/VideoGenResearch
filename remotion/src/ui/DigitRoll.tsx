@@ -25,8 +25,17 @@ export interface DigitRollProps {
   delay?: number;
   /** 每位错峰帧数 / Stagger frames per digit. */
   stagger?: number;
-  /** 单个数字走完的帧数 / Frames for one digit to settle. */
+  /** 单个数字**滚动段**的帧数（卡：16f）/ Frames for the roll leg. */
   duration?: number;
+  /**
+   * 过冲后回弹锁定的帧数（卡：6f）/ Frames to settle back after overshoot.
+   *
+   * 卡上明确：**「无过冲读作滑到即停，机械感减半」** —— 这是本卡的命门，
+   * 不是可选装饰。所以它默认开启且非零。
+   */
+  settle?: number;
+  /** 过冲量（行数，卡：+0.5 行）/ Overshoot in line-heights. */
+  overshoot?: number;
   fontSize?: number;
   color?: string;
   /** 字重；可变字体用 fontVariationSettings 生效 / Weight via variable axis. */
@@ -37,7 +46,9 @@ export const DigitRoll: React.FC<DigitRollProps> = ({
   value,
   delay = 0,
   stagger = 4,
-  duration = 22,
+  duration = 16,
+  settle = 6,
+  overshoot = 0.5,
   fontSize = 30,
   color = "#E8F1F2",
   weight = 800,
@@ -67,9 +78,14 @@ export const DigitRoll: React.FC<DigitRollProps> = ({
           );
         }
 
-        const t = interpolate(
+        const start = delay + i * stagger;
+
+        // ── 两段式落位：先过冲半格，再 6f 弹回整数（镜头卡 `odometer-digit-roll`）
+        //    「位 i 于 20+i×7f 开始 16f out(cubic) 减速至目标 +0.5 行过冲，
+        //      再 6f 弹回整数锁定」—— 过冲是机械感的来源，去掉就读作「滑到即停」。
+        const rollT = interpolate(
           frame,
-          [delay + i * stagger, delay + i * stagger + duration],
+          [start, start + duration],
           [0, 1],
           {
             extrapolateLeft: "clamp",
@@ -78,9 +94,20 @@ export const DigitRoll: React.FC<DigitRollProps> = ({
             easing: Easing.bezier(0.25, 0.8, 0.25, 1),
           },
         );
+        const settleT = interpolate(
+          frame,
+          [start + duration, start + duration + settle],
+          [0, 1],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.inOut(Easing.quad),
+          },
+        );
 
-        // 先滚满一整条 strip（10 位）再落到目标位
-        const offset = (10 + target) * t * lineH;
+        // 先滚满一整条 strip（10 位）到 (目标 + 过冲)，settleT 再把过冲量收回去
+        const posLines = (10 + target + overshoot) * rollT - overshoot * settleT;
+        const offset = posLines * lineH;
 
         return (
           <span key={i} style={{ display: "inline-block", height: lineH }}>
