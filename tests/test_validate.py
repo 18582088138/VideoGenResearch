@@ -243,7 +243,11 @@ def test_too_many_metrics_truncated() -> None:
 
 
 def test_long_metric_value_truncated() -> None:
-    """数值超过 8 字符要截断（会撑破版式）。"""
+    """数值超过 8 字符要截断（会撑破版式）。
+
+    样本用**纯阿拉伯数字**：中文数字会被 `_repair_numerals` 先规范化
+    （「百分之四十六点零」→「46.0%」，反而变短），那样就测不到截断逻辑了。
+    """
     from videogen.spec import ShotMetric
 
     spec = VideoSpec(
@@ -251,13 +255,80 @@ def test_long_metric_value_truncated() -> None:
         shots=[
             ShotSpec(
                 type="counter-burst", from_frame=0, duration_in_frames=600,
-                metrics=[ShotMetric(label="降幅", value="百分之四十六点零")],
+                metrics=[ShotMetric(label="降幅", value="1234567890")],
             )
         ],
     )
     out = validate_and_repair(spec, make_timeline(), [])
 
     assert len(out.shots[0].metrics[0].value) == 8
+
+
+def test_chinese_numerals_converted() -> None:
+    """中文数字要改成阿拉伯数字（用户口径：数字直接用数字）。
+
+    为什么必须在服务端收敛而不只靠 prompt：旁白由 TTS 合成，音频里读的
+    就是「百分之四十六」，模型写文案时会跟着旁白的读法走。
+    另外规范化会让文案变短，对字数约束是好事。
+    """
+    spec = VideoSpec(
+        kind="short", fps=30, duration_in_frames=600, theme="cyan-noir",
+        shots=[
+            ShotSpec(type="title-reveal", from_frame=0, duration_in_frames=600,
+                     text="降幅百分之四十六", subtext="压缩为六十四维"),
+        ],
+    )
+
+    out = validate_and_repair(spec, make_timeline(), [])
+
+    assert out.shots[0].text == "降幅46%", out.shots[0].text
+    assert out.shots[0].subtext == "压缩为64维", out.shots[0].subtext
+    assert any(r.field_name == "numerals" for r in out.repair_log)
+
+
+def test_rebalance_borrows_frames_instead_of_splitting() -> None:
+    """轻微超限**先向邻居借帧**，而不是切分。
+
+    切分的代价是复制内容（同一画面播两遍），为几帧付这个代价不值。
+    实测曾出现「单镜 153 帧（超 3 帧）就被切成 76+77」。
+
+    构造：镜 0 超 3 帧（153），邻居 140 各有 10 帧余量 → 应借到 150 而**不切分**。
+    """
+    spec = VideoSpec(
+        kind="short", fps=30, duration_in_frames=853, theme="cyan-noir",
+        shots=[
+            ShotSpec(type="title-reveal", from_frame=0, duration_in_frames=d, text=f"S{i}")
+            for i, d in enumerate([153, 140, 140, 140, 140, 140])
+        ],
+    )
+    spec.shots[-1].type = "outro-lockup"
+
+    out = validate_and_repair(spec, make_timeline(total_frames=853), [])
+
+    # 没有切分 → 仍是 6 镜
+    assert len(out.shots) == 6, [s.duration_in_frames for s in out.shots]
+    assert all(s.duration_in_frames <= MAX_SHOT_FRAMES for s in out.shots), [
+        s.duration_in_frames for s in out.shots
+    ]
+    assert sum(s.duration_in_frames for s in out.shots) == 853
+
+
+def test_oversized_shot_still_splits_when_no_room() -> None:
+    """邻居也没有余量时，仍然要切分 —— 借帧只是**优先手段**，不是免切金牌。"""
+    spec = VideoSpec(
+        kind="short", fps=30, duration_in_frames=1090, theme="cyan-noir",
+        shots=[
+            ShotSpec(type="title-reveal", from_frame=0, duration_in_frames=300, text=f"S{i}")
+            for i in range(6)
+        ],
+    )
+    spec.shots[-1].type = "outro-lockup"
+
+    out = validate_and_repair(spec, make_timeline(total_frames=1090), [])
+
+    assert all(s.duration_in_frames <= MAX_SHOT_FRAMES for s in out.shots)
+    assert sum(s.duration_in_frames for s in out.shots) == 1090
+    assert len(out.shots) > 6, "没有任何余量时应当切分"
 
 
 def test_long_text_truncated() -> None:

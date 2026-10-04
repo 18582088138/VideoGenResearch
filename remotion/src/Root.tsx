@@ -19,8 +19,31 @@ import { ShortFilm } from "./compositions/ShortFilm";
 import { MidFilm } from "./compositions/MidFilm";
 import type { FilmProps } from "./compositions/types";
 /** 长短视频的实测基准帧数（音频时长 × 30fps，向上取整）。 */
-export const SHORT_FRAMES = 1490;
-export const MID_FRAMES = 4665;
+/**
+ * 静态帧数兜底 / Static frame-count fallbacks.
+ *
+ * ⚠️ **这两个值必须比任何真实时长都大**，原因是一个实测踩过的坑：
+ *
+ * Remotion 在**校验 `--frames=<start>-<end>` 时用的是 Composition 上声明的静态
+ * `durationInFrames`，而不是 `calculateMetadata` 算出来的值**。
+ * 也就是说 `--frames` 的合法范围只看这里的常数。
+ *
+ * 实测后果：`SetLandscape` 原先写 `SHORT_FRAMES = 1490`（旧素材的时长），
+ * 换成长度 1545 帧的新素材后，成片渲染正常（51.56s，`calculateMetadata` 生效），
+ * 但**分镜片段导出全部报错**：
+ *
+ *     The "durationInFrames" of the <Composition /> was evaluated to be 1490,
+ *     but frame range 1401-1544 is not inbetween 0-1489
+ *
+ * 所以这里给一个足够大的上限；**真正的时长永远由 props 的
+ * `durationInFrames` 决定**（见 `fromProps`）。
+ *
+ * Remotion validates `--frames` against the *static* durationInFrames, not the
+ * value produced by calculateMetadata. These constants only need to be an upper
+ * bound; the real length always comes from props.
+ */
+export const SHORT_FRAMES = 30000; // ≈16.7 分钟，足够任何短视频
+export const MID_FRAMES = 30000;   // 同上；实际时长由 props 决定
 
 /** 横竖屏尺寸 / Landscape and portrait dimensions. */
 export const SIZES = {

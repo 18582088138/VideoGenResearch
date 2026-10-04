@@ -128,6 +128,14 @@ def segment(units: list[ASRUnit], params: SubtitleParams | None = None) -> list[
         # Never split inside a number; "零点三" + "四四米" reads as garbage.
         splits_number = last in _NUMERIC and next_first in _NUMERIC
 
+        # 逐字母朗读的缩写内部不切。TTS 读「W、A、S、D」时字母之间有自然停顿，
+        # 会超过 pause_gap 被误判成句间停顿 —— 实测被切成
+        # 「做法是把 W A / S D 角色键和 I / J K L 相机键」三段，读起来是乱的。
+        #
+        # 判据：当前单元与下一个单元**都是单个 ASCII 字母**。
+        next_text = ordered[i + 1].text.strip() if i + 1 < len(ordered) else ""
+        splits_letters = _is_single_letter(char) and _is_single_letter(next_text)
+
         hard_pause = nxt_gap >= p.pause_gap
         strong_end = last in _STRONG_END
         over_chars = buf_len >= p.max_chars
@@ -135,9 +143,11 @@ def segment(units: list[ASRUnit], params: SubtitleParams | None = None) -> list[
         soft_pause = nxt_gap >= p.soft_gap and buf_len >= p.min_chars
         weak_end = last in _WEAK_END and buf_len >= p.min_chars
 
-        # 强制切分（不受数字保护约束）—— 但数字保护仍优先于"弱"边界
+        # 强制切分（不受数字/字母保护约束）—— 但那些保护仍优先于"弱"边界
         must_break = strong_end or over_chars or too_long
-        may_break = (hard_pause or soft_pause or weak_end) and not splits_number
+        may_break = (
+            hard_pause or soft_pause or weak_end
+        ) and not splits_number and not splits_letters
 
         if must_break or may_break:
             flush()
@@ -154,26 +164,49 @@ def segment_asr(result: ASRResult, params: SubtitleParams | None = None) -> list
 # ── 内部工具 / Internals ───────────────────────────────────────────────────
 
 
+def _is_single_letter(text: str) -> bool:
+    """是不是单个 ASCII 字母 / Whether this is one ASCII letter.
+
+    用来识别「逐字母朗读」的缩写（``W``、``A``、``S``、``D``）。
+    中文单字返回 ``False`` —— 中文之间该切就切，不受这条保护影响。
+    """
+    stripped = text.strip()
+    return len(stripped) == 1 and stripped.isascii() and stripped.isalpha()
+
+
 def _join(parts: list[str]) -> str:
     """拼接字级文本 / Join character-level text.
 
     中文不加空格；英文词之间补空格（否则 ``Hello``+``world`` 会粘成
     ``Helloworld``）。
+
+    ⚠️ **单个 ASCII 字符之间不补空格**。TTS 逐字母朗读缩写时，
+    ASR 会把它拆成一个个单字单元：
+
+    - ``W`` + ``A`` + ``S`` + ``D`` → **``WASD``**（不是 ``W A S D``）
+    - ``H`` + ``3``                  → **``H3``**（不是 ``H 3``）
+
+    实测踩过：修复前字幕里出现「H 3 World」「做法是把W A」这种断法。
     """
     out = ""
+    prev_piece = ""
     for raw in parts:
         piece = raw.strip()
         if not piece:
             continue
         if not out:
-            out = piece
+            out, prev_piece = piece, piece
             continue
-        prev = out[-1]
-        # 两侧都是 ASCII 字母/数字时补空格
-        if (prev.isascii() and prev.isalnum()) and (piece[0].isascii() and piece[0].isalnum()):
-            out += " " + piece
-        else:
-            out += piece
+
+        prev_char, next_char = out[-1], piece[0]
+        both_alnum = prev_char.isascii() and prev_char.isalnum() and next_char.isascii() and next_char.isalnum()
+        # 两侧都是**单字符** ASCII 字母/数字 → 视为同一个缩写/编号，不加空格
+        both_single = (
+            len(prev_piece) == 1 and prev_piece.isascii() and prev_piece.isalnum()
+            and len(piece) == 1 and piece.isascii() and piece.isalnum()
+        )
+        out += ("" if both_single else (" " if both_alnum else "")) + piece
+        prev_piece = piece
     return out.strip()
 
 
