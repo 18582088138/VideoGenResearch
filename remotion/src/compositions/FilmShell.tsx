@@ -40,7 +40,7 @@ const outroRanges = (plan: ShotSpec[]): Array<[number, number]> =>
 
 const FilmBody: React.FC<
   FilmShellProps & { theme: ThemeTokens; layout: Layout }
-> = ({ srtPath, audioPath, source, shots, defaultShots, theme, layout }) => {
+> = ({ srtPath, audioPath, source, shots, defaultShots, theme, layout, captionsEnabled = true, audioEnabled = true }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const cues = useCues(srtPath);
 
@@ -53,7 +53,7 @@ const FilmBody: React.FC<
   return (
     <>
       {/* 配音：整轨播完即可，不做裁剪 —— 时长已由 Composition 锁定 */}
-      <Audio src={audioUrl(audioPath)} />
+      {audioEnabled ? <Audio src={audioUrl(audioPath)} /> : null}
 
       {plan.map((shot, idx) => (
         <Sequence
@@ -71,7 +71,7 @@ const FilmBody: React.FC<
           （aesthetic-rules C1：「品牌收尾镜头除外，保持干净」）。
           The outro shot renders no subtitle band: the narration there *is* the
           CTA, so it duplicates the lockup text and tagline. */}
-      {cues ? (
+      {cues && captionsEnabled ? (
         <CaptionTrack
           cues={cues}
           theme={theme}
