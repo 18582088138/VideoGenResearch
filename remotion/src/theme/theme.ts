@@ -76,9 +76,24 @@ export const TUNING = {
 
   // ── 素材面板尺寸 / Asset panel sizing ──────────────────────────────────
   /**
-   * 竖屏图片可用的**安全框高度比例**。调大 → 图更大（用户反馈竖屏图偏小）；
-   * 但过大会把镜头的文案挤出画面，两者要一起看。
+   * 素材占 ``mediaZone`` 的比例。**这是「素材做主体」的主旋钮。**
+   *
+   * 1.0 = 素材恰好铺满 mediaZone 的一个方向（另一个方向居中留白）。
+   * **不要设成大于 1**：那会让素材超出 mediaZone，压住文案区
+   * （实测踩过：1.05 + 组件自身的 Ken-Burns zoom 叠加后，素材宽度达到画布的
+   *  148%，四边全被裁切）。
+   *
+   * 若想让素材在静止时也更大，应调 ``layout.ts`` 的 `PORTRAIT_MEDIA_SHARE`
+   * （改区域大小）或 `LANDSCAPE_MEDIA_SHARE`，而不是让素材溢出自己的区域。
+   *
+   * Keep this ≤ 1: values above 1 push the asset out of its zone and over the
+   * text zone. Enlarge the *zone* instead (PORTRAIT_MEDIA_SHARE in layout.ts).
    */
+  portraitMediaFill: 1.0,
+  /** 横屏同义旋钮 / Same knob for landscape. */
+  landscapeMediaFill: 1.0,
+  /** 竖屏图片安全框高度比例（保留给需显式限高的场景）。
+   *  Kept for call sites that need an explicit height cap. */
   portraitImageHeightRatio: 0.42,
   /** 横屏同义旋钮 / Same knob for landscape. */
   landscapeImageHeightRatio: 0.62,

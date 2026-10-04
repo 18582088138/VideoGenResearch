@@ -69,19 +69,20 @@ export const Caption: React.FC<CaptionProps> = ({
     <div
       style={{
         position: "absolute",
-        left: layout.safe.left,
-        width: layout.safeWidth,
-        top: layout.captionCenterY,
-        transform: "translateY(-50%)",
+        left: layout.captionBox.x,
+        width: layout.captionBox.w,
+        top: layout.captionBox.y,
+        height: layout.captionBox.h,
         display: "flex",
         justifyContent: "center",
+        alignItems: "center",
         opacity,
         fontFamily: FONT_FAMILY,
       }}
     >
       <div
         style={{
-          maxWidth: layout.safeWidth,
+          maxWidth: layout.captionBox.w,
           padding: `${fontSize * 0.34}px ${fontSize * 0.72}px`,
           borderRadius: fontSize * 0.36,
           // 半透明面 + 描边：纯透明会与背景曲线相亲，纯实心会挡住画面
