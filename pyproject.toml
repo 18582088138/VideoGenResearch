@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "videogen"
+version = "0.1.0"
+description = "Remotion + video-shotcraft 驱动的代码化视频生成模块 / Code-driven video generation on Remotion + video-shotcraft"
+requires-python = ">=3.10"
+# 依赖保持最小：标准库能做的绝不引入第三方。
+# 保持最小是有意的 —— 依赖越多，换机器时「跑不起来」的概率越高。
+dependencies = [
+    "Pillow>=10.0",   # 图片尺寸校验 / image dimension checks
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+# LLM 与渲染相关的依赖放在这里，正式工程化时再装。
+# LLM / rendering extras, installed at engineering time.
+llm = ["requests>=2.31"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# prompt 是纯文本文件，必须随包分发（缺了 planner 会直接报错，不静默降级）
+# Prompts ship as package data; a missing prompt must fail loudly, not degrade.
+[tool.setuptools.package-data]
+videogen = ["plan/prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# 默认排除花钱/耗时的用例（成本护栏，对标 DailyNewsAssistant 的做法）。
+# Exclude paid/slow tests by default — the primary cost guard.
+addopts = "-m 'not live and not slow'"
+markers = [
+    "live: 会真实调用 LLM 或付费外部服务 / calls real LLM or paid services",
+    "slow: 耗时较长（整片渲染等）/ long-running (full renders)",
+]

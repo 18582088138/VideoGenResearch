@@ -1,0 +1,48 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# ── 渲染产物：不入库（体积大且可再生）/ Render outputs: large and reproducible
+out/
+!out/.gitkeep
+
+# ── 素材：图片与音频为外部素材，不入库 ────────────────────────────────────
+# 保留目录结构与索引文件（索引是人工判读的成果，必须入库）。
+assets/images/*.jpg
+assets/images/*.png
+assets/audio/*.wav
+assets/audio/*.mp3
+assets/fonts/*.ttf
+assets/fonts/*.otf
+!assets/images/index.json
+!assets/audio/*.srt
+
+# ── 密钥：绝不入库 / Secrets: never committed
+.env
+.env.local
+
+# ── npm / Node（Remotion 工程在 remotion/ 子目录）────────────────────────
+node_modules/
+npm-debug.log*
+.npm-cache/
+.npm-tmp/
+
+# ── Remotion 的 public/ 是 assets/ 的同步副本（脚本复制，非链接）──────────
+# 不入库：源在 assets/，remotion/public 由 scripts/link-assets.ps1 生成。
+# Remotion 的 staticFile() 只认「与 package.json 同级的 public/」，
+# 无法直接指向 assets/，所以必须复制一份。
+remotion/public/
+remotion/out/
+
+# ── 编辑器 / OS ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# ���� Remotion Ԥ������ʱĿ¼���������ڹ������ڣ��� issues/005����������������������������������
+.render-tmp/
