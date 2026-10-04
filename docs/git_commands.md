@@ -615,6 +615,77 @@ git commit -m "fix(contract): 补齐跨语言契约，资源路径统一解析�
 
 ---
 
+## 第 34 步：补齐被遗漏的配置与素材元数据
+
+> **这一步是补漏。** 前 33 步的 `git add` 都写了具体路径，于是以下几类
+> **从未被任何一步 `git add` 过**，一直挂在未跟踪状态：
+> `.gitignore` 的修改、`memory/`、`remotion/scripts/render.ps1`、
+> 素材自带的字幕、以及新建的 `assets/sets/`。
+>
+> `git status` 报出来的 `_sizes.json` 与 `remotion/debug.log` **不是漏掉，
+> 是不该入库** —— 已删除，并在 `.gitignore` 里加了规则防复发。
+
+```powershell
+# .gitignore 本身也是配置，必须入库（它含素材集与日志的排除规则）
+git add .gitignore
+# 项目记忆：跨会话接手的唯一入口，必须入库
+git add memory/project.md
+# 渲染脚本（此前一直是未跟踪状态）
+git add remotion/scripts/render.ps1
+# 素材自带的原始字幕（.gitignore 已用 !assets/audio/*.srt 显式保留）
+git add assets/audio/narration.zh.srt assets/audio/shortvideo.zh.srt
+
+# 素材集：**只加文本，不加图片与音频**（大文件由 .gitignore 排除）
+git add assets/sets/omni-io-skills/set.json
+git add assets/sets/omni-io-skills/images/index.json
+git add assets/sets/omni-io-skills/audio/shortvideo.zh.srt
+git add assets/sets/omni-io-skills/audio/omni-io-skills.asr.srt
+# ASR 原始结果一并入库：23 KB，避免新机器重跑 ASR 再次计费
+git add assets/sets/omni-io-skills/audio/asr_omni-io-skills.json
+
+git commit -m "chore: 补齐遗漏的配置、记忆与素材元数据
+
+前 33 步的 git add 都写了具体路径，导致以下几类一直未被跟踪：
+
+- .gitignore：本次新增素材集与日志的排除规则
+  - **原有规则不级联到子目录** —— assets/audio/*.wav 匹配不到
+    assets/sets/x/audio/y.wav，会让素材集下 7.2 MB 图片与音频一起入库。
+    补 assets/sets/*/images/* 与 assets/sets/*/audio/* 两组规则，
+    保持与老 assets/ 同一套原则：**大文件不入库，索引与元数据入库**。
+  - 新增 remotion/*.log 与 *.render.log
+  - ⚠️ 顺带修复：本文件此前被 PowerShell Add-Content 写入了 GBK 字节
+    （第 47 行中文注释乱码），导致 git 与编辑工具无法按 UTF-8 读取。
+    已用 Python 统一重写为 UTF-8 无 BOM。
+- memory/project.md：本项目跨会话接手的唯一入口（含 10 轮决策与教训）
+- remotion/scripts/render.ps1：沙箱外渲染入口，此前一直是未跟踪状态
+- assets/audio/*.srt：素材自带原始字幕（ASR 重切版的兜底来源）
+- assets/sets/omni-io-skills/：素材集的文本部分
+  - set.json：标题/副标/口播/来源标注/来源目录
+  - images/index.json：**人工判读的图片语义标注**（规划质量的主要输入，
+    原始抓取元数据的 caption 全为 null，无法自动生成）
+  - audio/*.asr.srt：ASR 重切后的字幕
+  - audio/asr_*.json：ASR 原始结果缓存（避免重跑计费）
+
+图片与音频（共 7.2 MB）不入库，与项目既有原则一致。
+另删除两个不该入库的文件：_sizes.json（一次性中间产物）、
+remotion/debug.log（可再生日志）。"
+```
+
+### 提交前自检
+
+```powershell
+# 1) 确认大文件确实没被加进来（应该输出为空）
+git diff --cached --name-only | Select-String '\.(png|wav|mp3)$'
+
+# 2) 确认文本文件都进来了
+git diff --cached --name-only | Select-String 'index.json|set.json|asr|\.srt$|memory/|render.ps1|gitignore'
+
+# 3) 看这次提交的体积（应该只有几十 KB）
+git diff --cached --stat | Select-Object -Last 1
+```
+
+---
+
 ## 核对
 
 ```powershell
@@ -623,7 +694,8 @@ git status --short          # 期望：只剩未跟踪的 .env（且被忽略）
 git show --stat HEAD        # 看最后一个 commit 是否只含本步该含的文件
 ```
 
-**预期结果**：33 个 commit，每个只含其功能相关的文件，消息可读、能看出实现内容。
+**预期结果**：34 个 commit，`git status` 干净（除 `.env`）。
+每个 commit 只含其功能相关的文件，消息可读、能看出实现内容。
 
 ## 后续（每个批次完成后再覆写本文件）
 

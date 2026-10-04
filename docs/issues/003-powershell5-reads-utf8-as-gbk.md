@@ -52,3 +52,54 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File $f
 
 > 相关：`link-assets.ps1` 是唯一用 PowerShell 写的脚本，因为它要做目录 junction；
 > 其余脚本一律 Python（见开发守则 §3）。
+
+## 补充（Round 10）：**写入侧**同一个坑，会直接损坏仓库文件
+
+上面的现象是「PowerShell **读** UTF-8 时按 GBK 解」。同一件事还有**写**的一面，
+而且后果更严重：**它会静默写出混编码的文件。**
+
+**实际踩到的例子**：给 `.gitignore` 追加一条中文注释时用了
+
+```powershell
+Add-Content $gi "`n# ── 中文注释 ──`n.render-tmp/"
+```
+
+在 **Windows PowerShell 5.1** 下，`Add-Content` 用系统 ANSI 代码页（GBK）编码输出，
+于是这几行变成了 GBK 字节，而文件其余部分是 UTF-8。结果：
+
+```
+$ python -c "open('.gitignore',encoding='utf-8').read()"
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd3 in position 1692
+
+$ git status          # 能跑，但
+$ 编辑工具读取         # 报 "invalid UTF-8 text"，直接拒绝编辑该文件
+```
+
+**为什么危险**：`git` 自己不看编码，所以它**不会报错**；
+但任何按 UTF-8 读的工具（编辑器、DSH 的 read/write 工具、`python`）都会失败或读到乱码。
+这个文件会变成「git 能用、其它工具都用不了」的状态。
+
+**修法**：用 Python 重写整个文件为 UTF-8。
+
+```powershell
+# 不要用 Add-Content / Set-Content / Out-File（在 5.1 下都按 ANSI 编码）
+& $py -c @"
+import pathlib
+p = pathlib.Path('.gitignore')
+p.write_text(p.read_text(encoding='utf-8'), encoding='utf-8', newline='\n')
+"@
+```
+
+**判据与预防**：
+
+| 场景 | 规则 |
+|---|---|
+| **任何**对含中文的文件做写入 | 用 Python（`Path.write_text(..., encoding='utf-8')`）或 `[System.IO.File]::WriteAllText(..., UTF8Encoding($false))` |
+| 想用 `Add-Content` / `Set-Content` / `Out-File` | **不要**用于含非 ASCII 的文件 —— 5.1 下它们按 ANSI 编码 |
+| 写完一个含中文的文件 | 用 Python 做一次 `read_text(encoding='utf-8')` 自检（0 成本，能立刻抓到） |
+| 只读不写 | `Get-Content` 显示乱码不代表文件坏 —— 先按字节判断编码，**不要急着"修复"** |
+
+> ⚠️ **反过来也要小心**：`Get-Content` 在 5.1 下显示乱码，很可能只是**显示**问题
+> （文件本身是好的 UTF-8）。我这次就先被这个假象误导，以为 `memory/project.md` 损坏了，
+> 实际它完好无损（239 行 / UTF-8 / 无坏字节）。
+> **判断文件是否损坏要用字节级检查**（`read_bytes()` + `decode('utf-8')`），不要看终端输出。
