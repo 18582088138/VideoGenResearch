@@ -1,0 +1,98 @@
+{
+  "_comment": "图片素材语义索引 / Image asset semantic index. 由人工看图判读生成，供 LLM 规划阶段消费。原始 .json 里 caption 全为 null，本文件补足语义。",
+  "_source": "DailyNewsAssistant/outputs/articles/20260919/登上Science-Robotics顶刊-清华团队耗时22年-终于教会机器人踢足__39558d8b/images",
+  "_article": "登上Science Robotics顶刊！清华团队耗时22年，终于教会机器人踢足球",
+  "assets": [
+    {
+      "file": "01_mmbiz-qpic-cn.jpg",
+      "width": 1280,
+      "height": 544,
+      "aspect": 2.353,
+      "role": "webpage_screenshot",
+      "kind": "journal_listing",
+      "label": "Science Robotics 官网 RESEARCH 列表页截图",
+      "description": "期刊官网列表页，左侧 hero 卡为人形机器人踢球照片与论文标题 «Learning vision-driven reactive soccer skills for humanoid robots»，日期 19 AUG 2026；右侧为 ZEST / SONIC 两条同期论文。",
+      "narrative_use": "开场『登上顶刊』的可信度锚点",
+      "suggested_shots": ["spotlight-hero-card", "cursor-flyover", "crash-zoom-punch"],
+      "notes": "带浏览器/页面 chrome，适合 PageCam 类页面运镜；与 03 为同页不同裁切，二者同片只用其一"
+    },
+    {
+      "file": "03_mmbiz-qpic-cn.jpg",
+      "width": 1080,
+      "height": 608,
+      "aspect": 1.776,
+      "role": "webpage_screenshot",
+      "kind": "journal_listing",
+      "label": "Science Robotics 官网 RESEARCH 列表页截图（另一种裁切）",
+      "description": "与 01 同一页面的更紧凑裁切，hero 图更完整，页面 chrome 占比更少。",
+      "narrative_use": "开场备用；竖屏版式下比 01 更易裁切",
+      "suggested_shots": ["spotlight-hero-card", "scanline-annotate-focus"],
+      "notes": "信息与 01 冗余，同片只用其一"
+    },
+    {
+      "file": "04_mmbiz-qpic-cn.png",
+      "width": 1080,
+      "height": 1070,
+      "aspect": 1.009,
+      "role": "document",
+      "kind": "paper_frontpage",
+      "label": "论文首页（标题 / 作者 / 单位 / Abstract）",
+      "description": "清华与 ByteDance Seed 双机构 logo，论文标题、作者与三家单位署名（清华大学、ByteDance Seed、中国农业大学）、Abstract 全文框、Date: November 7 2025、Project Page 链接。",
+      "narrative_use": "『谁做的』—— 三家单位联合署名是最硬的背书",
+      "suggested_shots": ["document-typewriter-reveal", "scan-bracket-sweep", "scroll-brake-moves"],
+      "notes": "白底文档；Abstract 文字密集，运镜需停在标题/署名区，不要横扫全文"
+    },
+    {
+      "file": "05_mmbiz-qpic-cn.png",
+      "width": 1080,
+      "height": 609,
+      "aspect": 1.773,
+      "role": "diagram",
+      "kind": "system_architecture",
+      "label": "系统架构图（感知-运动闭环 / 25Hz / 50Hz）",
+      "description": "真机室内足球场照片上叠加信息流：Goal、Ball Detection、BEV Projection、Odometry、Policy、Action、Proprioception，并标注视觉 25Hz 与控制器 50Hz。",
+      "narrative_use": "『怎么做的』—— 统一感知-运动框架的直观表达",
+      "suggested_shots": ["scanline-annotate-focus", "cycle-glass-node-morph", "ring-diagram-annotation-reveal"],
+      "notes": "图内已有英文标签与频率数字，无需再造标签；适合扫描线逐点标注"
+    },
+    {
+      "file": "06_mmbiz-qpic-cn.png",
+      "width": 1080,
+      "height": 865,
+      "aspect": 1.249,
+      "role": "diagram",
+      "kind": "motion_repertoire",
+      "label": "动作库五式 + 轨迹覆盖图",
+      "description": "左列 Left Kick / Turn Left / Walk / Turn Right / Right Kick 五个人形动作示意；右侧为 Policy 分布（灰点）叠加 Reference 与 Trajectory 曲线，含图例。",
+      "narrative_use": "AMP 对抗运动先验段落；『76 秒行走 + 30 秒脚弓射门』的数据来源",
+      "suggested_shots": ["radial-wave", "value-stagger-gradient", "avatar-grid-radial-build-colorize"],
+      "notes": "五动作可逐个入场；右侧轨迹图适合慢推近"
+    },
+    {
+      "file": "07_mmbiz-qpic-cn.png",
+      "width": 1080,
+      "height": 484,
+      "aspect": 2.231,
+      "role": "chart",
+      "kind": "radar_comparison",
+      "label": "雷达图对比：Learned（深蓝）vs Rule-based（青）",
+      "description": "左侧两个极坐标图：(A) 各方向触球耗时 Time/s、(B) 各方向最大角速度 Max Angular Velocity/rad·s⁻¹，深蓝 Learned 在外圈完整包住青色 Rule-based；右侧 C/D/E/F 四行真机射门连拍。",
+      "narrative_use": "⭐ 全场最佳：雷达图外圈包内圈，直接把『学习策略全面优于规则系统』可视化，天然对应 ↓64%",
+      "suggested_shots": ["spotlight-sweep-moves", "scanline-annotate-focus", "chart-live-moves"],
+      "notes": "本片视觉高潮候选；建议配 SFX impact/riser，落定后给足 hold"
+    },
+    {
+      "file": "08_mmbiz-qpic-cn.png",
+      "width": 1080,
+      "height": 959,
+      "aspect": 1.126,
+      "role": "chart",
+      "kind": "performance_curves",
+      "label": "性能曲线组（成功率 / 遮挡时间 / 误差轨迹）",
+      "description": "(A) Success Rate vs 训练轮次含三种 ablation；(B) Kick/Goal 占比 vs Occlusion Time 0→1.0s 堆叠柱；(C) Pitch/Yaw 角密度；(D) Error/m 曲线含 Kick Time 红虚线；(E) x/y 轨迹含 Not Detected 灰区；(F) 底部 t=0.75→1.75s 射门连拍。",
+      "narrative_use": "核心数字的证据区：(B) 支撑『视觉中断 0.3 秒仍 >90%』，(D)(E) 支撑『0.344m → 0.186m』",
+      "suggested_shots": ["scanline-annotate-focus", "value-stagger-gradient", "scroll-brake-moves", "chart-live-moves"],
+      "notes": "六个子图密集，必须靠运镜逐个 highlight；一块屏幕放不下全部，需分区揭示"
+    }
+  ]
+}
