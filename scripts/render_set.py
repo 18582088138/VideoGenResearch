@@ -43,7 +43,14 @@ if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
 from videogen.compile import CRF_BY_ASPECT, missing_assets, write_props  # noqa: E402
-from videogen.paths import PROJECT_ROOT, out_dir  # noqa: E402
+from videogen.paths import (  # noqa: E402
+    PROJECT_ROOT,
+    ensure_deliverable_dirs,
+    logs_dir,
+    storyboard_dir,
+    subtitles_dir,
+    video_dir,
+)
 from videogen.render.remotion import build_env, remotion_dir  # noqa: E402
 from videogen.sources import AssetSetError, load_set  # noqa: E402
 from videogen.spec import VideoSpec  # noqa: E402
@@ -97,7 +104,7 @@ def main() -> int:
     # ── 1) 时间轴与 spec / Timeline and spec ──────────────────────────────
     timeline = build_timeline(asset_set.srt(), asset_set.audio, fps=30,
                               title=asset_set.title, subtitle=asset_set.subtitle)
-    spec_path = out_dir() / asset_set.name / args.kind / "spec.json"
+    spec_path = storyboard_dir(asset_set.name, args.kind) / "spec.json"
     if not spec_path.exists():
         print(f"缺少 spec / no spec: {spec_path}")
         print(f"  先跑 / run first: scripts\\plan.py --set {asset_set.name} --kind {args.kind}")
@@ -131,7 +138,21 @@ def main() -> int:
     print(f"已镜像 / mirrored: {len(copied)} 个文件 → remotion/public/{asset_set.name}/")
 
     # ── 4) 每个方向编译 props / Compile props per aspect ──────────────────
-    run_dir = out_dir() / asset_set.name / args.kind
+    # 交付物目录按类型分好（video / shots / storyboard / qa / logs），
+    # 结构定义见 videogen/paths.py 顶部注释。
+    ensure_deliverable_dirs(asset_set.name, args.kind)
+
+    # 把字幕归档进交付物的 subtitles/ —— 字幕是独立交付物（可单独替换），
+    # 但它生成时落在素材集的 audio/ 下（那里是"输入"）。不归档的话
+    # 交付目录里会缺这一类文件，二次修改时找不到。
+    try:
+        srt = asset_set.srt()
+        if srt.exists():
+            shutil.copy2(srt, subtitles_dir(asset_set.name, args.kind) / f"{asset_set.name}_{args.kind}.srt")
+            print(f"字幕已归档 / subtitle archived: {srt.name}")
+    except (OSError, FileNotFoundError):
+        pass
+
     aspects = ("landscape", "portrait") if args.aspect == "both" else (args.aspect,)
     from videogen.compile import RenderTarget
 
@@ -139,10 +160,11 @@ def main() -> int:
     for aspect in aspects:
         composition = COMPOSITIONS[aspect]
         crf = args.crf or CRF_BY_ASPECT[aspect]
-        output = run_dir / f"{asset_set.name}_{aspect}.mp4"
+        output = video_dir(asset_set.name, args.kind) / f"{aspect}.mp4"
         target = RenderTarget(kind=args.kind, aspect=aspect, composition_id=composition,
                               crf=crf, output_name=output.name)
-        props_path = write_props(spec, timeline, target, run_dir, asset_set)
+        props_path = write_props(spec, timeline, target,
+                                 storyboard_dir(asset_set.name, args.kind), asset_set)
         jobs.append((composition, props_path, output))
         print(f"props: {props_path.name}  →  {composition}  crf={crf}")
 
@@ -156,8 +178,9 @@ def main() -> int:
     env = build_env()
     failures = 0
     for composition, props_path, output in jobs:
-        log_path = output.with_suffix(".render.log")
-        print(f"\n==> {composition} → {output.name}（日志 {log_path.name}）")
+        # 日志按方向落到 logs/（原先散在成片旁边，混在 video/ 里不好找）
+        log_path = logs_dir(asset_set.name, args.kind) / f"{output.stem}.log"
+        print(f"\n==> {composition} → {output.name}（日志 logs/{log_path.name}）")
         with log_path.open("w", encoding="utf-8") as log:
             code = subprocess.call(
                 ["node", str(cli), "render", "src/index.ts", composition,

@@ -38,7 +38,7 @@ if str(_SRC) not in sys.path:
 
 from videogen.assets import load_images  # noqa: E402
 from videogen.llm_config import describe, load_settings  # noqa: E402
-from videogen.paths import assets_dir, out_dir  # noqa: E402
+from videogen.paths import assets_dir, storyboard_dir  # noqa: E402
 from videogen.plan.planner import PlanRequest, plan_video  # noqa: E402
 from videogen.shot_catalog import load_catalog  # noqa: E402
 from videogen.sources import AssetSetError, AssetSet, list_sets, load_set  # noqa: E402
@@ -191,6 +191,13 @@ def main() -> int:
     cards = load_catalog()
     images = load_images(source.images_index)
     print(f"素材 / source: {source.describe()}")
+
+    # 文章正文：供模型找出「图里没有、文章里有的关键信息」给图文类镜头用
+    article_text = getattr(source, "article_text", "") or ""
+    if article_text:
+        print(f"文章正文 / article: {len(article_text)} 字（用于补足图片没表达的信息）")
+    else:
+        print("文章正文 / article: 无（图文类镜头只能依据旁白）")
     print(f"时间轴 / timeline: {timeline.audio_duration:.2f}s = {timeline.duration_frames} 帧, "
           f"{len(timeline.segments)} 段字幕")
     print(f"镜头卡 / cards: {len(cards)}　素材 / images: {len(images)}")
@@ -213,7 +220,8 @@ def main() -> int:
         print("模式 / mode: --dry-run（不调用 LLM，零费用）")
         spec, resp = plan_video(
             PlanRequest(kind=args.kind, timeline=timeline, cards=cards, images=images,
-                        theme=args.theme, aspect=args.aspect),
+                        theme=args.theme, aspect=args.aspect,
+                        article_text=article_text),
             client=_Canned(),  # type: ignore[arg-type]
         )
     else:
@@ -221,7 +229,8 @@ def main() -> int:
         print(f"LLM: {describe(settings)}")
         spec, resp = plan_video(
             PlanRequest(kind=args.kind, timeline=timeline, cards=cards, images=images,
-                        theme=args.theme, aspect=args.aspect),
+                        theme=args.theme, aspect=args.aspect,
+                        article_text=article_text),
             settings=settings,
         )
         print(f"用量 / usage: {resp.usage.summary()}")
@@ -230,13 +239,36 @@ def main() -> int:
     spec = validate_and_repair(spec, timeline, images)
 
     # ── 落盘 / Persist ──
-    # 产物按**素材集名**分目录，避免换一篇文章把上一套的 spec 覆盖掉。
-    # Output goes under the asset-set name so a new article never overwrites the
-    # previous one's spec.
-    target_dir = out_dir() / source.name / args.kind
+    # 产物按**素材集 + 类型**分目录：spec 属于「分镜数据」，与成片/字幕/片段分开，
+    # 这样二次修改时能直接找到它（目录结构见 videogen/paths.py 顶部注释）。
+    target_dir = storyboard_dir(source.name, args.kind)
     target_dir.mkdir(parents=True, exist_ok=True)
     spec_path = target_dir / "spec.json"
     spec.save(spec_path)
+
+    # 同时落一份**人可读的镜头表** —— spec.json 是给程序读的，
+    # 人工核对分镜时要的是这张表（帧范围/时长/类型/文案/素材一屏看完）。
+    lines = [f"# {source.title}", f"# {source.subtitle}", ""]
+    lines.append(f"总帧 {timeline.duration_frames}　"
+                 f"{timeline.audio_duration:.2f}s @{timeline.fps}fps　"
+                 f"{len(spec.shots)} 镜")
+    lines.append("")
+    lines.append(f"{'#':>3}  {'from':>6}  {'帧数':>5}  {'秒':>5}  "
+                 f"{'type':<16} {'素材':<24} 文案")
+    lines.append("-" * 100)
+    for i, s in enumerate(spec.shots):
+        lines.append(
+            f"{i:>3}  {s.from_frame:>6}  {s.duration_in_frames:>5}  "
+            f"{s.duration_in_frames / timeline.fps:>5.2f}  "
+            f"{s.type:<16} {s.image or '-':<24} {s.text}"
+        )
+    if spec.repair_log:
+        lines.append("")
+        lines.append("## 校验修复 / repairs")
+        for r in spec.repair_log:
+            idx = "-" if r.shot_index is None else str(r.shot_index)
+            lines.append(f"[{idx}] {r.field_name}: {r.problem} → {r.action}")
+    (target_dir / "shots.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(f"\n镜头表 / shots（{len(spec.shots)} 镜）:")
     for i, s in enumerate(spec.shots):

@@ -62,6 +62,78 @@ def out_dir() -> Path:
     return PROJECT_ROOT / "out"
 
 
+# ── 交付物目录结构 / Deliverable layout ────────────────────────────────────
+# 一套交付物 = ``out/<素材集>/<kind>/``，内部**按文件类型**分目录：
+#
+#     out/<set>/<short|mid>/
+#     ├── video/         成片 mp4（按方向命名）
+#     ├── shots/         分镜片段（内含 <aspect>/ 与 manifest.json）
+#     ├── subtitles/     字幕 srt
+#     ├── storyboard/    spec.json + props + 可读镜头表 —— 二次修改的输入
+#     ├── qa/            抽帧品检图
+#     └── logs/          渲染日志
+#
+# 为什么要固定这套结构：早先同一套产物散在三处（成片在 out/<set>/<kind>/、
+# 抽帧在 out/<set>/qa/ 与 out/qa_opt/、中间 props 在 out/runs/），
+# 找一个文件要翻四个顶层目录。现在「找出片 / 找字幕 / 找片段 / 找分镜数据」
+# 各自有唯一位置。
+#
+# One bundle per (asset set, kind), with a subdirectory per file type, so every
+# artefact has exactly one home.
+
+
+def deliverable_dir(set_name: str, kind: str) -> Path:
+    """一套交付物的根 / Root of one deliverable bundle."""
+    return out_dir() / set_name / kind
+
+
+def video_dir(set_name: str, kind: str) -> Path:
+    """成片目录 / Finished films."""
+    return deliverable_dir(set_name, kind) / "video"
+
+
+def shots_dir(set_name: str, kind: str) -> Path:
+    """分镜片段目录（内含 <方向>/ 子目录）/ Per-shot clips (per orientation)."""
+    return deliverable_dir(set_name, kind) / "shots"
+
+
+def subtitles_dir(set_name: str, kind: str) -> Path:
+    """字幕目录 / Subtitle files."""
+    return deliverable_dir(set_name, kind) / "subtitles"
+
+
+def storyboard_dir(set_name: str, kind: str) -> Path:
+    """分镜数据目录（spec / props / 镜头表）/ Storyboard data."""
+    return deliverable_dir(set_name, kind) / "storyboard"
+
+
+def qa_dir(set_name: str, kind: str) -> Path:
+    """抽帧品检目录 / QA stills."""
+    return deliverable_dir(set_name, kind) / "qa"
+
+
+def logs_dir(set_name: str, kind: str) -> Path:
+    """渲染日志目录 / Render logs."""
+    return deliverable_dir(set_name, kind) / "logs"
+
+
+def ensure_deliverable_dirs(set_name: str, kind: str) -> Path:
+    """建好一套交付物的全部子目录 / Create every subdirectory of a bundle.
+
+    :returns: 交付物根目录 / the bundle root.
+    """
+    for path in (
+        video_dir(set_name, kind),
+        shots_dir(set_name, kind),
+        subtitles_dir(set_name, kind),
+        storyboard_dir(set_name, kind),
+        qa_dir(set_name, kind),
+        logs_dir(set_name, kind),
+    ):
+        path.mkdir(parents=True, exist_ok=True)
+    return deliverable_dir(set_name, kind)
+
+
 def shot_catalog_json() -> Path:
     """镜头卡索引 JSON（由 ``scripts/build_shot_catalog.py`` 生成）。
 
