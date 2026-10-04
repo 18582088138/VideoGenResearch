@@ -1,0 +1,1514 @@
+{
+  "text": "清华大学赵明国团队联合字节跳动seed、中国农业大学在Science Robotics特刊发布论文，真机平台是加速进化人形机器人。团队提出统一感知运动强化学习框架，端到端训练策略读取过去五十帧约一秒观测，压缩为六十四维隐藏状态，控制器以五十赫兹输出关节指令。射门前一秒，足球位置误差从零点三四四米降到零点一八六米，降幅约百分之四十六。视觉中断零点三秒，触球成功率仍超百分之九十，进球率超百分之五十。静止球启动到触球约一点五秒，规则系统需二至五秒，最高降幅百分之六十四。真机前场成功率百分之八十至百分之九十，后场百分之六十至百分之七十，全程无摔倒。关注我，下期分享AI行业最新进展。",
+  "duration": 49.664417,
+  "speakers": 1,
+  "base_url": "https://api.minimax.cn",
+  "units": [
+    {
+      "start": 0.08,
+      "end": 0.26,
+      "text": "清",
+      "speaker": "S1"
+    },
+    {
+      "start": 0.26,
+      "end": 0.42,
+      "text": "华",
+      "speaker": "S1"
+    },
+    {
+      "start": 0.42,
+      "end": 0.58,
+      "text": "大",
+      "speaker": "S1"
+    },
+    {
+      "start": 0.58,
+      "end": 0.74,
+      "text": "学",
+      "speaker": "S1"
+    },
+    {
+      "start": 0.74,
+      "end": 0.9,
+      "text": "赵",
+      "speaker": "S1"
+    },
+    {
+      "start": 0.9,
+      "end": 1.04,
+      "text": "明",
+      "speaker": "S1"
+    },
+    {
+      "start": 1.04,
+      "end": 1.18,
+      "text": "国",
+      "speaker": "S1"
+    },
+    {
+      "start": 1.18,
+      "end": 1.34,
+      "text": "团",
+      "speaker": "S1"
+    },
+    {
+      "start": 1.34,
+      "end": 1.54,
+      "text": "队",
+      "speaker": "S1"
+    },
+    {
+      "start": 1.64,
+      "end": 1.84,
+      "text": "联",
+      "speaker": "S1"
+    },
+    {
+      "start": 1.86,
+      "end": 2.04,
+      "text": "合",
+      "speaker": "S1"
+    },
+    {
+      "start": 2.04,
+      "end": 2.2,
+      "text": "字",
+      "speaker": "S1"
+    },
+    {
+      "start": 2.2,
+      "end": 2.34,
+      "text": "节",
+      "speaker": "S1"
+    },
+    {
+      "start": 2.34,
+      "end": 2.54,
+      "text": "跳",
+      "speaker": "S1"
+    },
+    {
+      "start": 2.54,
+      "end": 2.68,
+      "text": "动",
+      "speaker": "S1"
+    },
+    {
+      "start": 2.68,
+      "end": 3.04,
+      "text": "seed、",
+      "speaker": "S1"
+    },
+    {
+      "start": 3.14,
+      "end": 3.34,
+      "text": "中",
+      "speaker": "S1"
+    },
+    {
+      "start": 3.34,
+      "end": 3.46,
+      "text": "国",
+      "speaker": "S1"
+    },
+    {
+      "start": 3.46,
+      "end": 3.6,
+      "text": "农",
+      "speaker": "S1"
+    },
+    {
+      "start": 3.6,
+      "end": 3.7,
+      "text": "业",
+      "speaker": "S1"
+    },
+    {
+      "start": 3.7,
+      "end": 3.86,
+      "text": "大",
+      "speaker": "S1"
+    },
+    {
+      "start": 3.86,
+      "end": 4.1,
+      "text": "学",
+      "speaker": "S1"
+    },
+    {
+      "start": 4.18,
+      "end": 4.4,
+      "text": "在",
+      "speaker": "S1"
+    },
+    {
+      "start": 4.4,
+      "end": 4.76,
+      "text": "Science ",
+      "speaker": "S1"
+    },
+    {
+      "start": 4.78,
+      "end": 5.38,
+      "text": "Robotics",
+      "speaker": "S1"
+    },
+    {
+      "start": 5.44,
+      "end": 5.64,
+      "text": "特",
+      "speaker": "S1"
+    },
+    {
+      "start": 5.64,
+      "end": 5.8,
+      "text": "刊",
+      "speaker": "S1"
+    },
+    {
+      "start": 5.8,
+      "end": 5.96,
+      "text": "发",
+      "speaker": "S1"
+    },
+    {
+      "start": 5.96,
+      "end": 6.06,
+      "text": "布",
+      "speaker": "S1"
+    },
+    {
+      "start": 6.06,
+      "end": 6.2,
+      "text": "论",
+      "speaker": "S1"
+    },
+    {
+      "start": 6.2,
+      "end": 6.44,
+      "text": "文，",
+      "speaker": "S1"
+    },
+    {
+      "start": 7.2,
+      "end": 7.36,
+      "text": "真",
+      "speaker": "S1"
+    },
+    {
+      "start": 7.36,
+      "end": 7.48,
+      "text": "机",
+      "speaker": "S1"
+    },
+    {
+      "start": 7.48,
+      "end": 7.64,
+      "text": "平",
+      "speaker": "S1"
+    },
+    {
+      "start": 7.64,
+      "end": 7.86,
+      "text": "台",
+      "speaker": "S1"
+    },
+    {
+      "start": 7.86,
+      "end": 8.04,
+      "text": "是",
+      "speaker": "S1"
+    },
+    {
+      "start": 8.06,
+      "end": 8.3,
+      "text": "加",
+      "speaker": "S1"
+    },
+    {
+      "start": 8.3,
+      "end": 8.44,
+      "text": "速",
+      "speaker": "S1"
+    },
+    {
+      "start": 8.44,
+      "end": 8.58,
+      "text": "进",
+      "speaker": "S1"
+    },
+    {
+      "start": 8.58,
+      "end": 8.76,
+      "text": "化",
+      "speaker": "S1"
+    },
+    {
+      "start": 8.76,
+      "end": 8.92,
+      "text": "人",
+      "speaker": "S1"
+    },
+    {
+      "start": 8.92,
+      "end": 9.08,
+      "text": "形",
+      "speaker": "S1"
+    },
+    {
+      "start": 9.08,
+      "end": 9.2,
+      "text": "机",
+      "speaker": "S1"
+    },
+    {
+      "start": 9.2,
+      "end": 9.32,
+      "text": "器",
+      "speaker": "S1"
+    },
+    {
+      "start": 9.32,
+      "end": 9.52,
+      "text": "人。",
+      "speaker": "S1"
+    },
+    {
+      "start": 10.04,
+      "end": 10.22,
+      "text": "团",
+      "speaker": "S1"
+    },
+    {
+      "start": 10.22,
+      "end": 10.38,
+      "text": "队",
+      "speaker": "S1"
+    },
+    {
+      "start": 10.38,
+      "end": 10.54,
+      "text": "提",
+      "speaker": "S1"
+    },
+    {
+      "start": 10.54,
+      "end": 10.7,
+      "text": "出",
+      "speaker": "S1"
+    },
+    {
+      "start": 10.72,
+      "end": 10.92,
+      "text": "统",
+      "speaker": "S1"
+    },
+    {
+      "start": 10.92,
+      "end": 11.04,
+      "text": "一",
+      "speaker": "S1"
+    },
+    {
+      "start": 11.04,
+      "end": 11.22,
+      "text": "感",
+      "speaker": "S1"
+    },
+    {
+      "start": 11.22,
+      "end": 11.36,
+      "text": "知",
+      "speaker": "S1"
+    },
+    {
+      "start": 11.36,
+      "end": 11.52,
+      "text": "运",
+      "speaker": "S1"
+    },
+    {
+      "start": 11.52,
+      "end": 11.66,
+      "text": "动",
+      "speaker": "S1"
+    },
+    {
+      "start": 11.66,
+      "end": 11.84,
+      "text": "强",
+      "speaker": "S1"
+    },
+    {
+      "start": 11.84,
+      "end": 12.0,
+      "text": "化",
+      "speaker": "S1"
+    },
+    {
+      "start": 12.0,
+      "end": 12.14,
+      "text": "学",
+      "speaker": "S1"
+    },
+    {
+      "start": 12.14,
+      "end": 12.26,
+      "text": "习",
+      "speaker": "S1"
+    },
+    {
+      "start": 12.26,
+      "end": 12.42,
+      "text": "框",
+      "speaker": "S1"
+    },
+    {
+      "start": 12.42,
+      "end": 12.62,
+      "text": "架，",
+      "speaker": "S1"
+    },
+    {
+      "start": 12.78,
+      "end": 12.96,
+      "text": "端",
+      "speaker": "S1"
+    },
+    {
+      "start": 12.96,
+      "end": 13.06,
+      "text": "到",
+      "speaker": "S1"
+    },
+    {
+      "start": 13.06,
+      "end": 13.2,
+      "text": "端",
+      "speaker": "S1"
+    },
+    {
+      "start": 13.2,
+      "end": 13.38,
+      "text": "训",
+      "speaker": "S1"
+    },
+    {
+      "start": 13.38,
+      "end": 13.6,
+      "text": "练",
+      "speaker": "S1"
+    },
+    {
+      "start": 13.78,
+      "end": 13.98,
+      "text": "策",
+      "speaker": "S1"
+    },
+    {
+      "start": 13.98,
+      "end": 14.14,
+      "text": "略",
+      "speaker": "S1"
+    },
+    {
+      "start": 14.14,
+      "end": 14.3,
+      "text": "读",
+      "speaker": "S1"
+    },
+    {
+      "start": 14.3,
+      "end": 14.46,
+      "text": "取",
+      "speaker": "S1"
+    },
+    {
+      "start": 14.46,
+      "end": 14.62,
+      "text": "过",
+      "speaker": "S1"
+    },
+    {
+      "start": 14.62,
+      "end": 14.76,
+      "text": "去",
+      "speaker": "S1"
+    },
+    {
+      "start": 14.76,
+      "end": 14.88,
+      "text": "五",
+      "speaker": "S1"
+    },
+    {
+      "start": 14.88,
+      "end": 15.02,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 15.02,
+      "end": 15.24,
+      "text": "帧",
+      "speaker": "S1"
+    },
+    {
+      "start": 15.46,
+      "end": 15.62,
+      "text": "约",
+      "speaker": "S1"
+    },
+    {
+      "start": 15.62,
+      "end": 15.74,
+      "text": "一",
+      "speaker": "S1"
+    },
+    {
+      "start": 15.74,
+      "end": 15.92,
+      "text": "秒",
+      "speaker": "S1"
+    },
+    {
+      "start": 15.92,
+      "end": 16.1,
+      "text": "观",
+      "speaker": "S1"
+    },
+    {
+      "start": 16.1,
+      "end": 16.32,
+      "text": "测，",
+      "speaker": "S1"
+    },
+    {
+      "start": 16.44,
+      "end": 16.64,
+      "text": "压",
+      "speaker": "S1"
+    },
+    {
+      "start": 16.64,
+      "end": 16.8,
+      "text": "缩",
+      "speaker": "S1"
+    },
+    {
+      "start": 16.8,
+      "end": 16.94,
+      "text": "为",
+      "speaker": "S1"
+    },
+    {
+      "start": 16.94,
+      "end": 17.1,
+      "text": "六",
+      "speaker": "S1"
+    },
+    {
+      "start": 17.1,
+      "end": 17.22,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 17.22,
+      "end": 17.4,
+      "text": "四",
+      "speaker": "S1"
+    },
+    {
+      "start": 17.4,
+      "end": 17.54,
+      "text": "维",
+      "speaker": "S1"
+    },
+    {
+      "start": 17.54,
+      "end": 17.7,
+      "text": "隐",
+      "speaker": "S1"
+    },
+    {
+      "start": 17.7,
+      "end": 17.88,
+      "text": "藏",
+      "speaker": "S1"
+    },
+    {
+      "start": 17.88,
+      "end": 18.04,
+      "text": "状",
+      "speaker": "S1"
+    },
+    {
+      "start": 18.04,
+      "end": 18.24,
+      "text": "态，",
+      "speaker": "S1"
+    },
+    {
+      "start": 18.88,
+      "end": 19.08,
+      "text": "控",
+      "speaker": "S1"
+    },
+    {
+      "start": 19.08,
+      "end": 19.18,
+      "text": "制",
+      "speaker": "S1"
+    },
+    {
+      "start": 19.18,
+      "end": 19.38,
+      "text": "器",
+      "speaker": "S1"
+    },
+    {
+      "start": 19.42,
+      "end": 19.58,
+      "text": "以",
+      "speaker": "S1"
+    },
+    {
+      "start": 19.58,
+      "end": 19.74,
+      "text": "五",
+      "speaker": "S1"
+    },
+    {
+      "start": 19.74,
+      "end": 19.88,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 19.9,
+      "end": 20.04,
+      "text": "赫",
+      "speaker": "S1"
+    },
+    {
+      "start": 20.04,
+      "end": 20.2,
+      "text": "兹",
+      "speaker": "S1"
+    },
+    {
+      "start": 20.2,
+      "end": 20.38,
+      "text": "输",
+      "speaker": "S1"
+    },
+    {
+      "start": 20.38,
+      "end": 20.54,
+      "text": "出",
+      "speaker": "S1"
+    },
+    {
+      "start": 20.54,
+      "end": 20.74,
+      "text": "关",
+      "speaker": "S1"
+    },
+    {
+      "start": 20.74,
+      "end": 20.88,
+      "text": "节",
+      "speaker": "S1"
+    },
+    {
+      "start": 20.88,
+      "end": 21.02,
+      "text": "指",
+      "speaker": "S1"
+    },
+    {
+      "start": 21.02,
+      "end": 21.2,
+      "text": "令。",
+      "speaker": "S1"
+    },
+    {
+      "start": 21.6,
+      "end": 21.8,
+      "text": "射",
+      "speaker": "S1"
+    },
+    {
+      "start": 21.8,
+      "end": 21.92,
+      "text": "门",
+      "speaker": "S1"
+    },
+    {
+      "start": 21.92,
+      "end": 22.08,
+      "text": "前",
+      "speaker": "S1"
+    },
+    {
+      "start": 22.08,
+      "end": 22.18,
+      "text": "一",
+      "speaker": "S1"
+    },
+    {
+      "start": 22.18,
+      "end": 22.44,
+      "text": "秒，",
+      "speaker": "S1"
+    },
+    {
+      "start": 22.5,
+      "end": 22.66,
+      "text": "足",
+      "speaker": "S1"
+    },
+    {
+      "start": 22.66,
+      "end": 22.78,
+      "text": "球",
+      "speaker": "S1"
+    },
+    {
+      "start": 22.78,
+      "end": 22.92,
+      "text": "位",
+      "speaker": "S1"
+    },
+    {
+      "start": 22.92,
+      "end": 23.02,
+      "text": "置",
+      "speaker": "S1"
+    },
+    {
+      "start": 23.02,
+      "end": 23.16,
+      "text": "误",
+      "speaker": "S1"
+    },
+    {
+      "start": 23.16,
+      "end": 23.38,
+      "text": "差",
+      "speaker": "S1"
+    },
+    {
+      "start": 23.4,
+      "end": 23.58,
+      "text": "从",
+      "speaker": "S1"
+    },
+    {
+      "start": 23.58,
+      "end": 23.76,
+      "text": "零",
+      "speaker": "S1"
+    },
+    {
+      "start": 23.76,
+      "end": 23.9,
+      "text": "点",
+      "speaker": "S1"
+    },
+    {
+      "start": 23.9,
+      "end": 24.08,
+      "text": "三",
+      "speaker": "S1"
+    },
+    {
+      "start": 24.08,
+      "end": 24.22,
+      "text": "四",
+      "speaker": "S1"
+    },
+    {
+      "start": 24.22,
+      "end": 24.38,
+      "text": "四",
+      "speaker": "S1"
+    },
+    {
+      "start": 24.38,
+      "end": 24.56,
+      "text": "米",
+      "speaker": "S1"
+    },
+    {
+      "start": 24.6,
+      "end": 24.78,
+      "text": "降",
+      "speaker": "S1"
+    },
+    {
+      "start": 24.78,
+      "end": 24.9,
+      "text": "到",
+      "speaker": "S1"
+    },
+    {
+      "start": 24.9,
+      "end": 25.08,
+      "text": "零",
+      "speaker": "S1"
+    },
+    {
+      "start": 25.08,
+      "end": 25.22,
+      "text": "点",
+      "speaker": "S1"
+    },
+    {
+      "start": 25.22,
+      "end": 25.34,
+      "text": "一",
+      "speaker": "S1"
+    },
+    {
+      "start": 25.34,
+      "end": 25.46,
+      "text": "八",
+      "speaker": "S1"
+    },
+    {
+      "start": 25.46,
+      "end": 25.62,
+      "text": "六",
+      "speaker": "S1"
+    },
+    {
+      "start": 25.62,
+      "end": 25.8,
+      "text": "米，",
+      "speaker": "S1"
+    },
+    {
+      "start": 25.86,
+      "end": 26.06,
+      "text": "降",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.06,
+      "end": 26.18,
+      "text": "幅",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.18,
+      "end": 26.34,
+      "text": "约",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.34,
+      "end": 26.48,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.48,
+      "end": 26.6,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.6,
+      "end": 26.7,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.7,
+      "end": 26.86,
+      "text": "四",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.86,
+      "end": 26.96,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 26.96,
+      "end": 27.16,
+      "text": "六。",
+      "speaker": "S1"
+    },
+    {
+      "start": 27.6,
+      "end": 27.82,
+      "text": "视",
+      "speaker": "S1"
+    },
+    {
+      "start": 27.82,
+      "end": 27.94,
+      "text": "觉",
+      "speaker": "S1"
+    },
+    {
+      "start": 27.94,
+      "end": 28.1,
+      "text": "中",
+      "speaker": "S1"
+    },
+    {
+      "start": 28.1,
+      "end": 28.26,
+      "text": "断",
+      "speaker": "S1"
+    },
+    {
+      "start": 28.26,
+      "end": 28.42,
+      "text": "零",
+      "speaker": "S1"
+    },
+    {
+      "start": 28.42,
+      "end": 28.54,
+      "text": "点",
+      "speaker": "S1"
+    },
+    {
+      "start": 28.54,
+      "end": 28.7,
+      "text": "三",
+      "speaker": "S1"
+    },
+    {
+      "start": 28.7,
+      "end": 28.92,
+      "text": "秒，",
+      "speaker": "S1"
+    },
+    {
+      "start": 29.02,
+      "end": 29.2,
+      "text": "触",
+      "speaker": "S1"
+    },
+    {
+      "start": 29.2,
+      "end": 29.34,
+      "text": "球",
+      "speaker": "S1"
+    },
+    {
+      "start": 29.34,
+      "end": 29.48,
+      "text": "成",
+      "speaker": "S1"
+    },
+    {
+      "start": 29.48,
+      "end": 29.64,
+      "text": "功",
+      "speaker": "S1"
+    },
+    {
+      "start": 29.64,
+      "end": 29.82,
+      "text": "率",
+      "speaker": "S1"
+    },
+    {
+      "start": 29.86,
+      "end": 30.08,
+      "text": "仍",
+      "speaker": "S1"
+    },
+    {
+      "start": 30.08,
+      "end": 30.24,
+      "text": "超",
+      "speaker": "S1"
+    },
+    {
+      "start": 30.24,
+      "end": 30.38,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 30.38,
+      "end": 30.5,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 30.5,
+      "end": 30.6,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 30.6,
+      "end": 30.76,
+      "text": "九",
+      "speaker": "S1"
+    },
+    {
+      "start": 30.76,
+      "end": 31.04,
+      "text": "十，",
+      "speaker": "S1"
+    },
+    {
+      "start": 31.1,
+      "end": 31.3,
+      "text": "进",
+      "speaker": "S1"
+    },
+    {
+      "start": 31.3,
+      "end": 31.44,
+      "text": "球",
+      "speaker": "S1"
+    },
+    {
+      "start": 31.44,
+      "end": 31.62,
+      "text": "率",
+      "speaker": "S1"
+    },
+    {
+      "start": 31.64,
+      "end": 31.84,
+      "text": "超",
+      "speaker": "S1"
+    },
+    {
+      "start": 31.84,
+      "end": 31.98,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 31.98,
+      "end": 32.1,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 32.1,
+      "end": 32.2,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 32.2,
+      "end": 32.34,
+      "text": "五",
+      "speaker": "S1"
+    },
+    {
+      "start": 32.34,
+      "end": 32.64,
+      "text": "十。",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.06,
+      "end": 33.26,
+      "text": "静",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.26,
+      "end": 33.38,
+      "text": "止",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.38,
+      "end": 33.56,
+      "text": "球",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.56,
+      "end": 33.7,
+      "text": "启",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.7,
+      "end": 33.84,
+      "text": "动",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.84,
+      "end": 33.98,
+      "text": "到",
+      "speaker": "S1"
+    },
+    {
+      "start": 33.98,
+      "end": 34.16,
+      "text": "触",
+      "speaker": "S1"
+    },
+    {
+      "start": 34.16,
+      "end": 34.34,
+      "text": "球",
+      "speaker": "S1"
+    },
+    {
+      "start": 34.34,
+      "end": 34.5,
+      "text": "约",
+      "speaker": "S1"
+    },
+    {
+      "start": 34.52,
+      "end": 34.68,
+      "text": "一",
+      "speaker": "S1"
+    },
+    {
+      "start": 34.68,
+      "end": 34.82,
+      "text": "点",
+      "speaker": "S1"
+    },
+    {
+      "start": 34.82,
+      "end": 34.96,
+      "text": "五",
+      "speaker": "S1"
+    },
+    {
+      "start": 34.96,
+      "end": 35.2,
+      "text": "秒，",
+      "speaker": "S1"
+    },
+    {
+      "start": 35.34,
+      "end": 35.54,
+      "text": "规",
+      "speaker": "S1"
+    },
+    {
+      "start": 35.54,
+      "end": 35.66,
+      "text": "则",
+      "speaker": "S1"
+    },
+    {
+      "start": 35.66,
+      "end": 35.8,
+      "text": "系",
+      "speaker": "S1"
+    },
+    {
+      "start": 35.8,
+      "end": 35.94,
+      "text": "统",
+      "speaker": "S1"
+    },
+    {
+      "start": 35.94,
+      "end": 36.14,
+      "text": "需",
+      "speaker": "S1"
+    },
+    {
+      "start": 36.16,
+      "end": 36.32,
+      "text": "二",
+      "speaker": "S1"
+    },
+    {
+      "start": 36.32,
+      "end": 36.46,
+      "text": "至",
+      "speaker": "S1"
+    },
+    {
+      "start": 36.46,
+      "end": 36.58,
+      "text": "五",
+      "speaker": "S1"
+    },
+    {
+      "start": 36.58,
+      "end": 36.82,
+      "text": "秒，",
+      "speaker": "S1"
+    },
+    {
+      "start": 36.96,
+      "end": 37.14,
+      "text": "最",
+      "speaker": "S1"
+    },
+    {
+      "start": 37.14,
+      "end": 37.28,
+      "text": "高",
+      "speaker": "S1"
+    },
+    {
+      "start": 37.28,
+      "end": 37.46,
+      "text": "降",
+      "speaker": "S1"
+    },
+    {
+      "start": 37.46,
+      "end": 37.62,
+      "text": "幅",
+      "speaker": "S1"
+    },
+    {
+      "start": 37.64,
+      "end": 37.8,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 37.8,
+      "end": 37.9,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 37.9,
+      "end": 38.0,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 38.0,
+      "end": 38.14,
+      "text": "六",
+      "speaker": "S1"
+    },
+    {
+      "start": 38.14,
+      "end": 38.26,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 38.26,
+      "end": 38.5,
+      "text": "四。",
+      "speaker": "S1"
+    },
+    {
+      "start": 39.18,
+      "end": 39.38,
+      "text": "真",
+      "speaker": "S1"
+    },
+    {
+      "start": 39.38,
+      "end": 39.54,
+      "text": "机",
+      "speaker": "S1"
+    },
+    {
+      "start": 39.54,
+      "end": 39.72,
+      "text": "前",
+      "speaker": "S1"
+    },
+    {
+      "start": 39.72,
+      "end": 39.92,
+      "text": "场",
+      "speaker": "S1"
+    },
+    {
+      "start": 39.94,
+      "end": 40.14,
+      "text": "成",
+      "speaker": "S1"
+    },
+    {
+      "start": 40.14,
+      "end": 40.3,
+      "text": "功",
+      "speaker": "S1"
+    },
+    {
+      "start": 40.3,
+      "end": 40.48,
+      "text": "率",
+      "speaker": "S1"
+    },
+    {
+      "start": 40.5,
+      "end": 40.72,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 40.72,
+      "end": 40.84,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 40.84,
+      "end": 40.92,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 40.92,
+      "end": 41.08,
+      "text": "八",
+      "speaker": "S1"
+    },
+    {
+      "start": 41.08,
+      "end": 41.32,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 41.34,
+      "end": 41.58,
+      "text": "至",
+      "speaker": "S1"
+    },
+    {
+      "start": 41.6,
+      "end": 41.8,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 41.8,
+      "end": 41.92,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 41.92,
+      "end": 42.02,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 42.02,
+      "end": 42.18,
+      "text": "九",
+      "speaker": "S1"
+    },
+    {
+      "start": 42.18,
+      "end": 42.44,
+      "text": "十，",
+      "speaker": "S1"
+    },
+    {
+      "start": 42.72,
+      "end": 42.92,
+      "text": "后",
+      "speaker": "S1"
+    },
+    {
+      "start": 42.92,
+      "end": 43.12,
+      "text": "场",
+      "speaker": "S1"
+    },
+    {
+      "start": 43.12,
+      "end": 43.34,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 43.34,
+      "end": 43.44,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 43.44,
+      "end": 43.54,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 43.54,
+      "end": 43.72,
+      "text": "六",
+      "speaker": "S1"
+    },
+    {
+      "start": 43.72,
+      "end": 43.94,
+      "text": "十",
+      "speaker": "S1"
+    },
+    {
+      "start": 43.96,
+      "end": 44.2,
+      "text": "至",
+      "speaker": "S1"
+    },
+    {
+      "start": 44.22,
+      "end": 44.42,
+      "text": "百",
+      "speaker": "S1"
+    },
+    {
+      "start": 44.42,
+      "end": 44.54,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 44.54,
+      "end": 44.66,
+      "text": "之",
+      "speaker": "S1"
+    },
+    {
+      "start": 44.66,
+      "end": 44.86,
+      "text": "七",
+      "speaker": "S1"
+    },
+    {
+      "start": 44.86,
+      "end": 45.12,
+      "text": "十，",
+      "speaker": "S1"
+    },
+    {
+      "start": 45.38,
+      "end": 45.6,
+      "text": "全",
+      "speaker": "S1"
+    },
+    {
+      "start": 45.6,
+      "end": 45.76,
+      "text": "程",
+      "speaker": "S1"
+    },
+    {
+      "start": 45.76,
+      "end": 45.94,
+      "text": "无",
+      "speaker": "S1"
+    },
+    {
+      "start": 45.94,
+      "end": 46.14,
+      "text": "摔",
+      "speaker": "S1"
+    },
+    {
+      "start": 46.14,
+      "end": 46.36,
+      "text": "倒。",
+      "speaker": "S1"
+    },
+    {
+      "start": 46.78,
+      "end": 46.98,
+      "text": "关",
+      "speaker": "S1"
+    },
+    {
+      "start": 46.98,
+      "end": 47.14,
+      "text": "注",
+      "speaker": "S1"
+    },
+    {
+      "start": 47.14,
+      "end": 47.3,
+      "text": "我，",
+      "speaker": "S1"
+    },
+    {
+      "start": 47.38,
+      "end": 47.66,
+      "text": "下",
+      "speaker": "S1"
+    },
+    {
+      "start": 47.66,
+      "end": 47.84,
+      "text": "期",
+      "speaker": "S1"
+    },
+    {
+      "start": 47.84,
+      "end": 47.98,
+      "text": "分",
+      "speaker": "S1"
+    },
+    {
+      "start": 47.98,
+      "end": 48.2,
+      "text": "享",
+      "speaker": "S1"
+    },
+    {
+      "start": 48.2,
+      "end": 48.46,
+      "text": "AI",
+      "speaker": "S1"
+    },
+    {
+      "start": 48.48,
+      "end": 48.66,
+      "text": "行",
+      "speaker": "S1"
+    },
+    {
+      "start": 48.66,
+      "end": 48.8,
+      "text": "业",
+      "speaker": "S1"
+    },
+    {
+      "start": 48.8,
+      "end": 48.98,
+      "text": "最",
+      "speaker": "S1"
+    },
+    {
+      "start": 48.98,
+      "end": 49.12,
+      "text": "新",
+      "speaker": "S1"
+    },
+    {
+      "start": 49.12,
+      "end": 49.28,
+      "text": "进",
+      "speaker": "S1"
+    },
+    {
+      "start": 49.28,
+      "end": 49.46,
+      "text": "展。",
+      "speaker": "S1"
+    }
+  ]
+}
