@@ -1,0 +1,67 @@
+[
+  {
+    "id": "deep-space",
+    "name": "深空蓝 · Deep Space",
+    "note": "标准科技蓝，最稳。蓝→青渐变，适合新闻/科研选题。",
+    "colors": {
+      "bg": "#05070D",
+      "surface": "#0E1524",
+      "surface2": "#1A2438",
+      "primary": "#4D8DFF",
+      "accent": "#22D3EE",
+      "alert": "#FFB020"
+    }
+  },
+  {
+    "id": "cyan-noir",
+    "name": "暗青水墨 · Cyan Noir",
+    "note": "近黑底 + 青绿高光，电影感最强，画面最「贵」。",
+    "colors": {
+      "bg": "#04080A",
+      "surface": "#0B1418",
+      "surface2": "#15242A",
+      "primary": "#2DD4BF",
+      "accent": "#7DF9FF",
+      "alert": "#F97362"
+    }
+  },
+  {
+    "id": "violet-pulse",
+    "name": "赛博紫 · Violet Pulse",
+    "note": "紫 + 电光青，赛博感最强，偏年轻向平台。",
+    "colors": {
+      "bg": "#0A0714",
+      "surface": "#171029",
+      "surface2": "#241A3D",
+      "primary": "#8B5CF6",
+      "accent": "#22D3EE",
+      "alert": "#F472B6"
+    }
+  },
+  {
+    "id": "carbon-lime",
+    "name": "碳黑荧光 · Carbon Lime",
+    "note": "近黑 + 荧光绿，数据/算法气质，数字翻转最抓眼。",
+    "colors": {
+      "bg": "#060A08",
+      "surface": "#101815",
+      "surface2": "#1B2622",
+      "primary": "#A3E635",
+      "accent": "#38BDF8",
+      "alert": "#FB7185"
+    }
+  },
+  {
+    "id": "ember-teal",
+    "name": "熔岩青 · Ember Teal",
+    "note": "暖橙 + 冷青互补，冲击力最强，适合「对决/对比」叙事。",
+    "colors": {
+      "bg": "#0B0806",
+      "surface": "#1A1310",
+      "surface2": "#2A1F19",
+      "primary": "#FF7A45",
+      "accent": "#2DD4BF",
+      "alert": "#FFD166"
+    }
+  }
+]
